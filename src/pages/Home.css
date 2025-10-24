@@ -1,0 +1,105 @@
+.home {
+  padding: 1.5rem 2rem;
+  max-width: auto;
+  margin: 2rem auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flightlist {
+  padding: 1.5rem 2rem;
+  max-width: auto;
+  margin: 2rem auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.home-title {
+  text-align: left;
+  color: #1e40af;
+  margin-top: 0; 
+  margin-bottom: 0.5rem;
+}
+
+.flightlist-title {
+  text-align: left;
+  color: #000000;
+  margin-top: 0; 
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.flight-form {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap; /* ensures it doesn't overflow on smaller screens */
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* all fields share equal width */
+  min-width: 200px;
+  font-weight: 500;
+  color: #111827;
+}
+
+input {
+  margin-top: 0.3rem;
+  padding: 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+.reset-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.reset-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 5.8rem;
+  margin: 0.2rem;
+  flex-shrink: 0; /* prevents button from shrinking on narrow screens */
+  display: flex;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* horizontal centering */
+}
+
+.search-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 5.8rem;
+  margin: 0.2rem;
+  flex-shrink: 0; /* prevents button from shrinking on narrow screens */
+  display: flex;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* horizontal centering */
+}
