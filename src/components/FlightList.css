@@ -1,0 +1,44 @@
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin: 1rem 0;
+  background: #f9fafb;
+}
+
+.filter-options label {
+  font-weight: 500;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+
+.flightlist {
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flightlist-title {
+  color: #1e40af;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.flightlist-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.flightlist-empty {
+  color: #6b7280;
+  font-style: italic;
+}
