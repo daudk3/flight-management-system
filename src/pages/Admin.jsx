@@ -1,5 +1,6 @@
 /* 
-Admin/staff can search for flights, manually add flights, delete flights, and edit passengers/seats
+TODO
+Admin/staff can search for flights (using FlightList.jsx), manually add flights, and delete flights and bookings
 */
 import { useMemo, useState } from "react";
 import { generateTestFlights } from "../utils";
@@ -27,17 +28,24 @@ export default function Admin() {
       const matchesDeparture = filters.departure
         ? flight.departure.toLowerCase().includes(searchTerm(filters.departure))
         : true;
+
       const matchesDestination = filters.destination
-        ? flight.destination.toLowerCase().includes(searchTerm(filters.destination))
+        ? flight.destination
+            .toLowerCase()
+            .includes(searchTerm(filters.destination))
         : true;
+
       const matchesDate = filters.date
         ? flight.departureTime.startsWith(filters.date)
         : true;
+
       const matchesFlightId = filters.flightId
         ? flight.id.toLowerCase().includes(searchTerm(filters.flightId))
         : true;
 
-      return matchesDeparture && matchesDestination && matchesDate && matchesFlightId;
+      return (
+        matchesDeparture && matchesDestination && matchesDate && matchesFlightId
+      );
     });
   }, [filters, flights]);
 
@@ -54,11 +62,16 @@ export default function Admin() {
     setSelectedFlight(flight);
   }
 
-  function handleSaveFlight(updatedFlight) {
-    setFlights((prev) =>
-      prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
-    );
+  function handleCloseEdit() {
     setSelectedFlight(null);
+  }
+
+  function handleSaveFlight(updatedFlight) {
+    setFlights((prevFlights) =>
+      prevFlights.map((flight) =>
+        flight.id === updatedFlight.id ? updatedFlight : flight
+      )
+    );
   }
 
   return (
@@ -85,8 +98,8 @@ export default function Admin() {
       {selectedFlight && (
         <EditFlightPopup
           flight={selectedFlight}
+          onClose={handleCloseEdit}
           onSave={handleSaveFlight}
-          onClose={() => setSelectedFlight(null)}
         />
       )}
     </main>

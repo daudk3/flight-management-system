@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "./EditFlightPopup.css";
+import "./editFlightPopup.css";
 
 export default function EditFlightPopup({ flight, onClose, onSave }) {
   const [tempFlight, setTempFlight] = useState(null);
