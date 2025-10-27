@@ -26,24 +26,37 @@ export default function BookingPopUp({
 
     const {
       flightNumber,
+      id,
       origin,
+      departure,
       destination,
       departureTime,
       arrivalTime,
       price,
     } = flight;
 
+    const originCity =
+      (origin ?? departure)?.toString().trim() || null;
+    const destinationCity = destination?.toString().trim() || null;
+    const fallbackTitle =
+      originCity && destinationCity
+        ? `${originCity} → ${destinationCity}`
+        : originCity ?? destinationCity ?? "Flight Details";
+
     return {
-      title:
-        flightNumber ||
-        `${origin ?? "Origin"} → ${destination ?? "Destination"}`,
+      title: flightNumber || id || fallbackTitle,
       subTitle:
-        origin && destination ? `${origin} → ${destination}` : null,
+        originCity && destinationCity
+          ? `${originCity} → ${destinationCity}`
+          : null,
       schedule:
         departureTime && arrivalTime
           ? `${departureTime} - ${arrivalTime}`
           : departureTime || null,
-      price: price ? `$${price}` : null,
+      price:
+        typeof price === "number"
+          ? `$${price}`
+          : price?.toString().trim() || null,
     };
   }, [flight]);
 
