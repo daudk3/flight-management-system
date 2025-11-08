@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export default function SignIn() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,6 +25,20 @@ export default function SignIn() {
     }
   }, [loading, navigate, redirectPath, role, user]);
 
+  useEffect(() => {
+    if (location.state?.accountCreated) {
+      setSuccessMessage(
+        "Account created successfully. Sign in with your new credentials.",
+      );
+
+      const { accountCreated: _accountCreated, ...rest } = location.state ?? {};
+      const nextState =
+        Object.keys(rest).length > 0 ? rest : null;
+
+      navigate(location.pathname, { replace: true, state: nextState });
+    }
+  }, [location, navigate]);
+
   function handleChange(event) {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   }
@@ -31,6 +46,7 @@ export default function SignIn() {
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage("");
+    setSuccessMessage("");
     setIsSubmitting(true);
 
     try {
@@ -85,6 +101,11 @@ export default function SignIn() {
               {errorMessage}
             </p>
           )}
+          {successMessage && (
+            <p className="signin-success" role="status">
+              {successMessage}
+            </p>
+          )}
 
           <button
             type="submit"
@@ -93,7 +114,13 @@ export default function SignIn() {
           >
             {isSubmitting ? "Signing in…" : "Sign In"}
           </button>
-
+          <button
+            type="button"
+            className="btn create-account-btn full-width"
+            onClick={() => navigate("/create-account")}
+          >
+            Create Customer Account
+          </button>
         </form>
       </div>
     </div>

@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
+import CreateAccount from "./pages/CreateAccount";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -17,6 +18,7 @@ export default function App() {
           <main className="flex-grow p-6 bg-gray-50">
             <Routes>
               <Route path="/signin" element={<SignIn />} />
+              <Route path="/create-account" element={<CreateAccount />} />
 
               <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
                 <Route path="/" element={<Home />} />
