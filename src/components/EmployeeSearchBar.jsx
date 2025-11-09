@@ -1,13 +1,35 @@
+import { useState } from "react";
 import "./EmployeeSearchBar.css";
 
-function SearchBar({
-  departure,
-  destination,
-  date,
-  flightId,
-  onChange,
-  onSearch,
-}) {
+export default function EmployeeSearchBar({ onSearch, onReset }) {
+  const [filters, setFilters] = useState({
+    departure: "",
+    destination: "",
+    date: "",
+    flightId: "",
+  });
+
+  // Handle typing in any input field
+  function handleChange(field, value) {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  }
+
+  // When user clicks Search
+  function handleSearchClick() {
+    if (onSearch) onSearch(filters);
+  }
+
+  // When user clicks Reset
+  function handleResetClick() {
+    setFilters({
+      departure: "",
+      destination: "",
+      date: "",
+      flightId: "",
+    });
+    if (onReset) onReset();
+  }
+
   return (
     <div className="employee-searchbar">
       {/* Departure */}
@@ -15,8 +37,8 @@ function SearchBar({
         <label className="employee-searchbar__label">Departure</label>
         <input
           type="text"
-          value={departure}
-          onChange={(e) => onChange("departure", e.target.value)}
+          value={filters.departure}
+          onChange={(e) => handleChange("departure", e.target.value)}
           placeholder="e.g. Toronto"
           className="employee-searchbar__input"
         />
@@ -27,8 +49,8 @@ function SearchBar({
         <label className="employee-searchbar__label">Destination</label>
         <input
           type="text"
-          value={destination}
-          onChange={(e) => onChange("destination", e.target.value)}
+          value={filters.destination}
+          onChange={(e) => handleChange("destination", e.target.value)}
           placeholder="e.g. Vancouver"
           className="employee-searchbar__input"
         />
@@ -39,8 +61,8 @@ function SearchBar({
         <label className="employee-searchbar__label">Date</label>
         <input
           type="date"
-          value={date}
-          onChange={(e) => onChange("date", e.target.value)}
+          value={filters.date}
+          onChange={(e) => handleChange("date", e.target.value)}
           className="employee-searchbar__input"
         />
       </div>
@@ -50,21 +72,28 @@ function SearchBar({
         <label className="employee-searchbar__label">Flight ID</label>
         <input
           type="text"
-          value={flightId}
-          onChange={(e) => onChange("flightId", e.target.value)}
+          value={filters.flightId}
+          onChange={(e) => handleChange("flightId", e.target.value)}
           placeholder="optional"
           className="employee-searchbar__input"
         />
       </div>
 
-      {/* Search Button */}
+      {/* Buttons */}
       <div className="employee-searchbar__actions">
-        <button onClick={onSearch} className="employee-searchbar__button">
+        <button
+          onClick={handleSearchClick}
+          className="employee-searchbar__button"
+        >
           Search
+        </button>
+        <button
+          onClick={handleResetClick}
+          className="employee-searchbar__button reset"
+        >
+          Reset
         </button>
       </div>
     </div>
   );
 }
-
-export default SearchBar;

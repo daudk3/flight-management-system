@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
+import TestSupabase from "./pages/TestSupabase";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/test" element={<TestSupabase />} />
           </Routes>
         </main>
       </div>

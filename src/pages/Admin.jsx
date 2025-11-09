@@ -1,86 +1,135 @@
-/* 
-Admin/staff can search for flights, manually add flights, delete flights, and edit passengers/seats
-*/
-import { useMemo, useState } from "react";
-import { generateTestFlights } from "../utils";
+// src/pages/Admin.jsx
+import { useEffect, useState } from "react";
 import EmployeeSearchBar from "../components/EmployeeSearchBar";
 import EmployeeFlightResult from "../components/EmployeeFlightResult";
 import EditFlightPopup from "../components/editFlightPopup";
+import { createClient } from "@supabase/supabase-js";
 
-const initialFilters = {
-  departure: "",
-  destination: "",
-  date: "",
-  flightId: "",
-};
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 export default function Admin() {
-  const [filters, setFilters] = useState(initialFilters);
   const [flights, setFlights] = useState([]);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [filteredFlights, setFilteredFlights] = useState([]);
   const [selectedFlight, setSelectedFlight] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const filteredFlights = useMemo(() => {
-    const searchTerm = (value) => value.trim().toLowerCase();
+  // Fetch flights on mount
+  useEffect(() => {
+    async function fetchFlights() {
+      const { data, error } = await supabase.from("flights").select("*");
+      if (error) {
+        console.error("Error fetching flights:", error);
+      } else {
+        console.log("Loaded flights from Supabase:", data);
+        setFlights(data);
+        setFilteredFlights(data);
+      }
+    }
+    fetchFlights();
+  }, []);
 
-    return flights.filter((flight) => {
-      const matchesDeparture = filters.departure
-        ? flight.departure.toLowerCase().includes(searchTerm(filters.departure))
-        : true;
-      const matchesDestination = filters.destination
-        ? flight.destination.toLowerCase().includes(searchTerm(filters.destination))
-        : true;
-      const matchesDate = filters.date
-        ? flight.departureTime.startsWith(filters.date)
-        : true;
-      const matchesFlightId = filters.flightId
-        ? flight.id.toLowerCase().includes(searchTerm(filters.flightId))
-        : true;
-
-      return matchesDeparture && matchesDestination && matchesDate && matchesFlightId;
-    });
-  }, [filters, flights]);
-
-  function handleChange(field, value) {
-    setFilters((prev) => ({ ...prev, [field]: value }));
-  }
-
-  function handleSearch() {
-    setFlights(generateTestFlights());
+  // Search / filter logic
+  const handleSearch = (filters) => {
+    console.log("Filters received:", filters);
+    const { departure, destination, date, flightId } = filters || {};
     setHasSearched(true);
-  }
 
-  function handleEditFlight(flight) {
+    const depTerm = (departure || "").toLowerCase();
+    const destTerm = (destination || "").toLowerCase();
+    const dateTerm = date?.trim();
+    const idTerm = flightId?.trim();
+
+    const filtered = flights.filter((flight) => {
+      const departureField =
+        flight.departure_airport || flight.departure || "";
+      const destinationField =
+        flight.destination_airport || flight.destination || "";
+      const departureTimeField =
+        flight.departure_time || flight.departureTime || "";
+
+      const matchesDeparture = !depTerm
+        ? true
+        : departureField.toLowerCase().includes(depTerm);
+
+      const matchesDestination = !destTerm
+        ? true
+        : destinationField.toLowerCase().includes(destTerm);
+
+      const matchesDate = !dateTerm
+        ? true
+        : departureTimeField.slice(0, 10) === dateTerm;
+
+      const matchesId = !idTerm
+        ? true
+        : String(flight.id).toLowerCase().includes(idTerm.toLowerCase());
+
+      return (
+        matchesDeparture && matchesDestination && matchesDate && matchesId
+      );
+    });
+
+    console.log("Filtered results:", filtered);
+    setFilteredFlights(filtered);
+  };
+
+  // Reset filters
+  const handleReset = () => {
+    console.log("Reset filters");
+    setFilteredFlights(flights);
+    setHasSearched(false);
+  };
+
+  // Edit popup
+  const handleEdit = (flight) => {
     setSelectedFlight(flight);
-  }
+  };
 
-  function handleSaveFlight(updatedFlight) {
-    setFlights((prev) =>
-      prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
-    );
-    setSelectedFlight(null);
-  }
+  // Save flight updates
+  const handleSaveFlight = async (updatedFlight) => {
+    try {
+      const { error } = await supabase
+        .from("flights")
+        .update({
+          departure_airport: updatedFlight.departure_airport,
+          destination_airport: updatedFlight.destination_airport,
+          departure_time: updatedFlight.departure_time,
+          arrival_time: updatedFlight.arrival_time,
+          price: updatedFlight.price,
+          gate_num: updatedFlight.gate_num,
+          flight_code: updatedFlight.flight_code,
+          status: updatedFlight.status ?? "On Time",
+        })
+        .eq("id", updatedFlight.id);
+
+      if (error) throw error;
+
+      // Update UI
+      setFlights((prev) =>
+        prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
+      );
+      setFilteredFlights((prev) =>
+        prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
+      );
+      setSelectedFlight(null);
+      alert("✅ Flight updated successfully!");
+    } catch (err) {
+      console.error("Error updating flight:", err);
+      alert("❌ Failed to update flight.");
+    }
+  };
 
   return (
     <main className="admin-page">
-      <section>
-        <EmployeeSearchBar
-          departure={filters.departure}
-          destination={filters.destination}
-          date={filters.date}
-          flightId={filters.flightId}
-          onChange={handleChange}
-          onSearch={handleSearch}
-        />
-      </section>
+      <EmployeeSearchBar onSearch={handleSearch} onReset={handleReset} />
 
-      <section>
-        <EmployeeFlightResult
-          flights={filteredFlights}
-          hasSearched={hasSearched}
-          onEdit={handleEditFlight}
-        />
-      </section>
+      <EmployeeFlightResult
+        flights={filteredFlights}
+        hasSearched={hasSearched}
+        onEdit={handleEdit}
+      />
 
       {selectedFlight && (
         <EditFlightPopup
