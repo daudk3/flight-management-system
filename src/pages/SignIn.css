@@ -1,0 +1,122 @@
+/* Center the entire page */
+.signin-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f3f4f6; /* light gray background */
+}
+
+/* White card container */
+.signin-card {
+  background-color: white;
+  padding: 2rem 3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Title */
+.signin-title {
+  color: #1e40af; /* your theme blue */
+  margin-bottom: 1.5rem;
+}
+
+.signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.signin-form label {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-weight: 500;
+  color: #111827;
+}
+
+.signin-form input {
+  margin-top: 0.4rem;
+  padding: 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.google-btn {
+  background-color: white;
+  color: #2563eb;
+  border: 1px solid #d1d5db;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.google-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.signin-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: -0.25rem 0 0.5rem;
+  text-align: left;
+}
+
+.signin-success {
+  color: #15803d;
+  font-size: 0.9rem;
+  margin: -0.25rem 0 0.5rem;
+  text-align: left;
+}
+
+.create-account-btn {
+  background-color: white;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.create-account-btn:hover {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.create-account-note {
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.create-account-footer {
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.create-account-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.create-account-link:hover {
+  text-decoration: underline;
+}
