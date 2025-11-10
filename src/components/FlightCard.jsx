@@ -1,3 +1,12 @@
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js"; 
+
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {
   month: "short",
@@ -12,6 +21,7 @@ const timeFormatter = new Intl.DateTimeFormat("en-CA", {
 function formatDateTime(isoString) {
   if (!isoString) {
     return "TBD";
+  
   }
   const parsed = new Date(isoString);
   if (Number.isNaN(parsed.getTime())) {
@@ -23,10 +33,30 @@ function formatDateTime(isoString) {
 }
 
 export default function FlightCard({ flight, onSelect }) {
+    console.log(flight)
   if (!flight) {
     return null;
   }
+  const [seatsLeft, setSeatsLeft] = useState(null);
+  useEffect(() => {
+    async function fetchSeats() {
+      const { count, error } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("flight_id", flight.id);
 
+      if (error) {
+        console.error("Error counting bookings:", error);
+      } else {
+        const totalSeats = 120;
+        const remaining = totalSeats - (count || 0);
+        setSeatsLeft(remaining);
+      }
+    }
+
+    fetchSeats();
+  }, [flight.id]);
+  
   const statusLabel = flight.status || "Scheduled";
   const statusClass = statusLabel
     .toLowerCase()
@@ -36,7 +66,8 @@ export default function FlightCard({ flight, onSelect }) {
     typeof flight.price === "string" && flight.price.trim().length > 0
       ? flight.price
       : `$${flight.price ?? "N/A"}`;
-  const gateLabel = flight.gate ? `Gate ${flight.gate}` : "Gate TBD";
+  const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
+;
   const seatsLabel =
     typeof flight.seatsAvailable === "number"
       ? `Seats ${flight.seatsAvailable}`
@@ -72,10 +103,10 @@ export default function FlightCard({ flight, onSelect }) {
       <header className="flight-card-header">
         <div>
           <h3>
-            {flight.departure} → {flight.destination}
+            {flight.departure_airport} → {flight.destination_airport}
           </h3>
           <p className="flight-card-subtitle">
-            {flight.airline} • {flight.id}
+            {flight.flight_code || "Flight"} • {flight.id}
           </p>
         </div>
         <p className="flight-card-price">{priceDisplay}</p>
@@ -84,20 +115,23 @@ export default function FlightCard({ flight, onSelect }) {
       <div className="flight-card-body">
         <div>
           <span className="flight-card-label">Departure</span>
-          <p>{formatDateTime(flight.departureTime)}</p>
+          <p>{formatDateTime(flight.departure_time)}</p>
           <span className="flight-card-meta">{gateLabel}</span>
         </div>
         <div>
           <span className="flight-card-label">Arrival</span>
-          <p>{formatDateTime(flight.arrivalTime)}</p>
-          <span className="flight-card-meta">{seatsLabel}</span>
+          <p>{formatDateTime(flight.arrival_time)}</p>
+          <span className="flight-card-meta">
+              Seats{" "}
+            {seatsLeft !== null
+              ? seatsLeft
+              : "Loading..."}</span>
         </div>
         <div>
           <span className="flight-card-label">Status</span>
-          <p
-            className={`flight-card-status status-${statusClass}`}
-          >
+          <p className={`flight-card-status status-${statusClass}`}>
             {statusLabel}
+            {seatsLeft !== null && seatsLeft <= 0 && ( <span style={{ color: "#b91c1c", fontWeight: "600" }}> • Full</span>)}
           </p>
         </div>
       </div>

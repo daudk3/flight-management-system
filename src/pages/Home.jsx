@@ -2,11 +2,16 @@
 TODO
 User can search for flights and see results (using FlightList.jsx)
 */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./Home.css";
 import FlightList from "../components/FlightList";
 import BookingPopUp from "../components/BookingPopUp";
-import { generateTestFlights } from "../utils";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const INITIAL_SEARCH = {
   departure: "",
@@ -15,11 +20,24 @@ const INITIAL_SEARCH = {
 };
 
 export default function Home() {
-  const flights = useMemo(() => generateTestFlights(), []);
+  const [flights, setFlights] = useState([]);
   const [search, setSearch] = useState(INITIAL_SEARCH);
   const [results, setResults] = useState(flights);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(null);
+  
+    useEffect(() => {
+    async function fetchFlights() {
+      const { data, error } = await supabase.from("flights").select("*");
+      if (error) {
+        console.error(" Error fetching flights:", error);
+      } else {
+        setFlights(data);
+        setResults(data); 
+      }
+    }
+    fetchFlights();
+  }, []);
 
   function handleSearchChange(event) {
     const { name, value } = event.target;
@@ -34,13 +52,11 @@ export default function Home() {
     const filtered = flights.filter((flight) => {
       const matchesDeparture =
         !departureTerm ||
-        flight.departure.toLowerCase().includes(departureTerm) ||
-        flight.origin?.toLowerCase?.().includes(departureTerm);
+        flight.departure_airport?.toLowerCase?.().includes(departureTerm);
 
       const matchesArrival =
         !arrivalTerm ||
-        flight.destination.toLowerCase().includes(arrivalTerm) ||
-        flight.arrival?.toLowerCase?.().includes(arrivalTerm);
+        flight.destination_airport?.toLowerCase?.().includes(arrivalTerm);
 
       const matchesDate =
         !dateTerm ||
@@ -72,10 +88,27 @@ export default function Home() {
     setSelectedFlight(null);
   }
 
-  function handleBookingSubmit(bookingData) {
-    // Placeholder for integrating with backend submission later.
-    console.info("Booking submitted", bookingData);
+  async function handleBookingSubmit(bookingData) {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      const { error } = await supabase.from("bookings").insert([
+        {
+          user_id: user.id,
+          flight_id: selectedFlight.id,
+          status: "confirmed",
+        },
+      ]);
+      if (error) {
+        console.error("Booking failed:", error);
+        alert("Booking failed!");
+      } else {
+        alert("Flight booked successfully!");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
   }
+  
 
   return (
     <main>

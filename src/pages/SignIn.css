@@ -16,6 +16,7 @@
   width: 100%;
   max-width: 400px;
   text-align: center;
+  margin-top: -15rem;
 }
 
 /* Title */
@@ -68,55 +69,4 @@
 .google-icon {
   width: 20px;
   height: 20px;
-}
-
-.signin-error {
-  color: #b91c1c;
-  font-size: 0.9rem;
-  margin: -0.25rem 0 0.5rem;
-  text-align: left;
-}
-
-.signin-success {
-  color: #15803d;
-  font-size: 0.9rem;
-  margin: -0.25rem 0 0.5rem;
-  text-align: left;
-}
-
-.create-account-btn {
-  background-color: white;
-  color: #2563eb;
-  border: 1px solid #2563eb;
-  justify-content: center;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.create-account-btn:hover {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-}
-
-.create-account-note {
-  margin-top: -0.5rem;
-  margin-bottom: 1rem;
-  color: #4b5563;
-  font-size: 0.95rem;
-  text-align: left;
-}
-
-.create-account-footer {
-  margin-top: 1.25rem;
-  font-size: 0.9rem;
-  color: #4b5563;
-}
-
-.create-account-link {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.create-account-link:hover {
-  text-decoration: underline;
 }

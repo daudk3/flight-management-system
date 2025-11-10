@@ -12,13 +12,11 @@
   background: white;
   border-radius: 10px;
   padding: 2rem;
-  width: min(960px, calc(100vw - 4rem));
-  max-width: 100%;
+  width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  box-sizing: border-box;
 }
 
 .section {
@@ -156,6 +154,13 @@ input[type="text"] {
   font-size: 0.9rem;
 }
 
+.seat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 1rem;
+}
+
 .seat {
   width: 40px;
   height: 40px;
@@ -204,11 +209,4 @@ input[type="text"] {
   margin-top: 1rem;
   max-height: 400px;  
   overflow-y: auto;
-}
-
-@media (max-width: 600px) {
-  .popup-content {
-    padding: 1.5rem;
-    width: min(100%, calc(100vw - 2rem));
-  }
 }
