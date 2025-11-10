@@ -165,7 +165,18 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         <div className="section">
           <h3>Seat Map</h3>
           <div className="seat-grid">
-            {seats.map((s) => (
+            {seats
+              .slice()
+              .sort((a, b) => {
+                const [, letterA = "", numberA = "0"] =
+                  /([A-Za-z]+)(\d+)/.exec(a.seat_code ?? "") || [];
+                const [, letterB = "", numberB = "0"] =
+                  /([A-Za-z]+)(\d+)/.exec(b.seat_code ?? "") || [];
+                const letterDiff = letterA.localeCompare(letterB);
+                if (letterDiff !== 0) return letterDiff;
+                return Number(numberA) - Number(numberB);
+              })
+              .map((s) => (
               <div
                 key={s.id}
                 className={`seat ${s.is_booked ? "taken" : "available"} ${

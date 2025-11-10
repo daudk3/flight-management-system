@@ -74,46 +74,45 @@ export default function Admin() {
     setSelectedFlight(flight);
   };
 
-  const handleSaveFlight = async (updatedFlight) => {
-    try {
-      const updates = {
-        departure_time: updatedFlight.departure_time,
-        arrival_time: updatedFlight.arrival_time,
-        price:
-          updatedFlight.price === "" || updatedFlight.price === null
-            ? null
-            : Number(updatedFlight.price),
-        departure_airport: updatedFlight.departure_airport,
-        destination_airport: updatedFlight.destination_airport,
-        gate_num: updatedFlight.gate_num,
-        flight_code: updatedFlight.flight_code,
-        status: updatedFlight.status ?? "On Time",
-      };
+const handleSaveFlight = async (updatedFlight) => {
+  try {
+    const updates = {
+      departure_time: updatedFlight.departure_time,
+      arrival_time: updatedFlight.arrival_time,
+      price:
+        updatedFlight.price === "" || updatedFlight.price === null
+          ? null
+          : Number(updatedFlight.price),
+      departure_airport: updatedFlight.departure_airport,
+      destination_airport: updatedFlight.destination_airport,
+      gate_num: updatedFlight.gate_num,
+      flight_code: updatedFlight.flight_code,
+      status: updatedFlight.status ?? "On Time",
+    };
 
-      const { data: updatedRow, error } = await supabase
-        .from("flights")
-        .update(updates)
-        .eq("id", updatedFlight.id)
-        .select("*")
-        .single();
+    const { data: updatedRow, error } = await supabase
+      .from("flights")
+      .update(updates)
+      .eq("id", updatedFlight.id)
+      .select("*")
+      .maybeSingle(); // ✅ prevents error when no row is returned
 
-      if (error) throw error;
+    if (error) throw error;
 
-      const nextFlight = updatedRow ?? { ...updatedFlight, ...updates };
+    const nextFlight = updatedRow ?? { ...updatedFlight, ...updates };
 
-      setFlights((prev) =>
-        prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
-      );
-      setFilteredFlights((prev) =>
-        prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
-      );
-      setSelectedFlight(null);
-      alert("✅ Flight updated successfully!");
-    } catch (err) {
-      console.error("Error updating flight:", err);
-      alert("❌ Failed to update flight.");
-    }
-  };
+    setFlights((prev) =>
+      prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
+    );
+    setFilteredFlights((prev) =>
+      prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
+    );
+    setSelectedFlight(null);
+    alert("✅ Flight updated successfully!");
+  } catch (err) {
+    console.error("Error updating flight:", err);
+  }
+};
 
   return (
     <main className="admin-page">
