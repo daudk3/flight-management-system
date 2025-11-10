@@ -19,6 +19,10 @@
   margin-top: -15rem;
 }
 
+.create-account-page .signin-card {
+  margin-top: 0;
+}
+
 /* Title */
 .signin-title {
   color: #1e40af; /* your theme blue */
@@ -49,6 +53,19 @@
 
 .full-width {
   width: 100%;
+}
+
+.create-account-btn {
+  justify-content: center;
+  text-align: center;
+  background-color: #e2e8f0;
+  color: #1f2937;
+  border: 1px solid #cbd5f5;
+}
+
+.create-account-btn:hover {
+  background-color: #cbd5f5;
+  color: #111827;
 }
 
 .google-btn {

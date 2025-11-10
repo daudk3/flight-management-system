@@ -3,12 +3,7 @@ import { useEffect, useState } from "react";
 import EmployeeSearchBar from "../components/EmployeeSearchBar";
 import EmployeeFlightResult from "../components/EmployeeFlightResult";
 import EditFlightPopup from "../components/editFlightPopup";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabaseClient";
 
 export default function Admin() {
   const [flights, setFlights] = useState([]);

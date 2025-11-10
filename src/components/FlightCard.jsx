@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js"; 
-
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabaseClient";
 
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {
@@ -33,12 +27,13 @@ function formatDateTime(isoString) {
 }
 
 export default function FlightCard({ flight, onSelect }) {
-    console.log(flight)
-  if (!flight) {
-    return null;
-  }
   const [seatsLeft, setSeatsLeft] = useState(null);
+
   useEffect(() => {
+    if (!flight?.id) {
+      return;
+    }
+
     async function fetchSeats() {
       const { count, error } = await supabase
         .from("bookings")
@@ -55,7 +50,11 @@ export default function FlightCard({ flight, onSelect }) {
     }
 
     fetchSeats();
-  }, [flight.id]);
+  }, [flight?.id]);
+
+  if (!flight) {
+    return null;
+  }
   
   const statusLabel = flight.status || "Scheduled";
   const statusClass = statusLabel
@@ -67,11 +66,6 @@ export default function FlightCard({ flight, onSelect }) {
       ? flight.price
       : `$${flight.price ?? "N/A"}`;
   const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
-;
-  const seatsLabel =
-    typeof flight.seatsAvailable === "number"
-      ? `Seats ${flight.seatsAvailable}`
-      : "Seats TBD";
 
   function handleClick() {
     onSelect?.(flight);

@@ -85,7 +85,7 @@ export default function CreateAccount() {
   }
 
   return (
-    <div className="signin-page">
+    <div className="signin-page create-account-page">
       <div className="signin-card">
         <h1 className="signin-title">Create your customer account</h1>
         <p className="create-account-note">

@@ -1,13 +1,12 @@
 // src/components/EditFlightPopup.jsx
 import { useState, useEffect } from "react";
-import "./EditFlightPopup.css";
+import "./editFlightPopup.css";
 import { updateFlight } from "../utils";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 export default function EditFlightPopup({ flight, onClose, onSave }) {
   const [tempFlight, setTempFlight] = useState(null);
   const [error, setError] = useState("");
-  const [editedSeats, setEditedSeats] = useState({});
   const [newPassenger, setNewPassenger] = useState({ name: "", seat: "" });
   const [seats, setSeats] = useState([]);
 

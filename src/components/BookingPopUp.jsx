@@ -65,7 +65,7 @@ export default function BookingPopUp({
       return;
     }
 
-    setForm((prev) => ({
+    setForm(() => ({
       ...INITIAL_FORM,
       travelClass:
         flight?.travelClass?.toLowerCase?.() ?? INITIAL_FORM.travelClass,

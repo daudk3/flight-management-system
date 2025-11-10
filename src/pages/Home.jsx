@@ -2,16 +2,11 @@
 TODO
 User can search for flights and see results (using FlightList.jsx)
 */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Home.css";
 import FlightList from "../components/FlightList";
 import BookingPopUp from "../components/BookingPopUp";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabaseClient";
 
 const INITIAL_SEARCH = {
   departure: "",
@@ -88,7 +83,7 @@ export default function Home() {
     setSelectedFlight(null);
   }
 
-  async function handleBookingSubmit(bookingData) {
+  async function handleBookingSubmit() {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       const { error } = await supabase.from("bookings").insert([
