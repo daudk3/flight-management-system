@@ -9,17 +9,14 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
     flightId: "",
   });
 
-  // Handle typing in any input field
   function handleChange(field, value) {
     setFilters((prev) => ({ ...prev, [field]: value }));
   }
 
-  // When user clicks Search
   function handleSearchClick() {
-    if (onSearch) onSearch(filters);
+    onSearch?.(filters);
   }
 
-  // When user clicks Reset
   function handleResetClick() {
     setFilters({
       departure: "",
@@ -27,12 +24,11 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
       date: "",
       flightId: "",
     });
-    if (onReset) onReset();
+    onReset?.();
   }
 
   return (
     <div className="employee-searchbar">
-      {/* Departure */}
       <div className="employee-searchbar__field">
         <label className="employee-searchbar__label">Departure</label>
         <input
@@ -44,7 +40,6 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
         />
       </div>
 
-      {/* Destination */}
       <div className="employee-searchbar__field">
         <label className="employee-searchbar__label">Destination</label>
         <input
@@ -56,7 +51,6 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
         />
       </div>
 
-      {/* Date */}
       <div className="employee-searchbar__field">
         <label className="employee-searchbar__label">Date</label>
         <input
@@ -67,7 +61,6 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
         />
       </div>
 
-      {/* Flight ID */}
       <div className="employee-searchbar__field">
         <label className="employee-searchbar__label">Flight ID</label>
         <input
@@ -79,7 +72,6 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
         />
       </div>
 
-      {/* Buttons */}
       <div className="employee-searchbar__actions">
         <button
           onClick={handleSearchClick}

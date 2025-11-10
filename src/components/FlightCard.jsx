@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {
   month: "short",
   day: "numeric",
@@ -15,7 +14,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-CA", {
 function formatDateTime(isoString) {
   if (!isoString) {
     return "TBD";
-  
   }
   const parsed = new Date(isoString);
   if (Number.isNaN(parsed.getTime())) {
@@ -55,7 +53,7 @@ export default function FlightCard({ flight, onSelect }) {
   if (!flight) {
     return null;
   }
-  
+
   const statusLabel = flight.status || "Scheduled";
   const statusClass = statusLabel
     .toLowerCase()
@@ -89,9 +87,7 @@ export default function FlightCard({ flight, onSelect }) {
       role={onSelect ? "button" : undefined}
       tabIndex={onSelect ? 0 : undefined}
       aria-label={
-        onSelect
-          ? `Open booking popup for flight ${flight.id}`
-          : undefined
+        onSelect ? `Open booking popup for flight ${flight.id}` : undefined
       }
     >
       <header className="flight-card-header">
@@ -116,16 +112,19 @@ export default function FlightCard({ flight, onSelect }) {
           <span className="flight-card-label">Arrival</span>
           <p>{formatDateTime(flight.arrival_time)}</p>
           <span className="flight-card-meta">
-              Seats{" "}
-            {seatsLeft !== null
-              ? seatsLeft
-              : "Loading..."}</span>
+            Seats {seatsLeft !== null ? seatsLeft : "Loading..."}
+          </span>
         </div>
         <div>
           <span className="flight-card-label">Status</span>
           <p className={`flight-card-status status-${statusClass}`}>
             {statusLabel}
-            {seatsLeft !== null && seatsLeft <= 0 && ( <span style={{ color: "#b91c1c", fontWeight: "600" }}> • Full</span>)}
+            {seatsLeft !== null && seatsLeft <= 0 && (
+              <span style={{ color: "#b91c1c", fontWeight: "600" }}>
+                {" "}
+                • Full
+              </span>
+            )}
           </p>
         </div>
       </div>

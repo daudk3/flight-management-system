@@ -54,20 +54,6 @@
 .full-width {
   width: 100%;
 }
-
-.create-account-btn {
-  justify-content: center;
-  text-align: center;
-  background-color: #e2e8f0;
-  color: #1f2937;
-  border: 1px solid #cbd5f5;
-}
-
-.create-account-btn:hover {
-  background-color: #cbd5f5;
-  color: #111827;
-}
-
 .google-btn {
   background-color: white;
   color: #2563eb;
@@ -86,4 +72,56 @@
 .google-icon {
   width: 20px;
   height: 20px;
+}
+
+.signin-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: -0.25rem 0 0.5rem;
+  text-align: left;
+}
+
+.signin-success {
+  color: #15803d;
+  font-size: 0.9rem;
+  margin: -0.25rem 0 0.5rem;
+  text-align: left;
+}
+
+.create-account-btn {
+  justify-content: center;
+  text-align: center;
+  background-color: #e2e8f0;
+  color: #1f2937;
+  border: 1px solid #cbd5f5;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.create-account-btn:hover {
+  background-color: #cbd5f5;
+  color: #111827;
+}
+
+.create-account-note {
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.create-account-footer {
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.create-account-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.create-account-link:hover {
+  text-decoration: underline;
 }

@@ -1,5 +1,4 @@
-// src/components/EditFlightPopup.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./editFlightPopup.css";
 import { updateFlight } from "../utils";
 import { supabase } from "../lib/supabaseClient";
@@ -11,27 +10,30 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
   const [seats, setSeats] = useState([]);
 
   useEffect(() => {
-    if (flight) {
-      const clone = JSON.parse(JSON.stringify(flight));
-      setTempFlight(clone);
-      loadSeats(flight.id);
+    if (!flight) {
+      return;
     }
+
+    setTempFlight(JSON.parse(JSON.stringify(flight)));
+    loadSeats(flight.id);
   }, [flight]);
 
   async function loadSeats(flightId) {
     try {
-      const { data, error } = await supabase
+      const { data, error: seatError } = await supabase
         .from("seats")
         .select("id, seat_code, is_booked")
         .eq("flight_id", flightId);
-      if (error) throw error;
-      setSeats(data);
+      if (seatError) throw seatError;
+      setSeats(data ?? []);
     } catch (err) {
       console.error("Error loading seats:", err.message);
     }
   }
 
-  if (!tempFlight) return null;
+  if (!tempFlight) {
+    return null;
+  }
 
   const takenSeats = seats.filter((s) => s.is_booked).map((s) => s.seat_code);
 
@@ -39,7 +41,7 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
     try {
       await updateFlight(flight.id, {
         departure_time: tempFlight.departure_time,
-        arrive_time: tempFlight.arrive_time,
+        arrival_time: tempFlight.arrival_time,
         price: tempFlight.price,
       });
       onSave(tempFlight);
@@ -50,7 +52,7 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
     }
   }
 
-  async function handleSeatClick(seatCode) {
+  function handleSeatClick(seatCode) {
     if (takenSeats.includes(seatCode)) {
       setError(`Seat ${seatCode} is already booked.`);
       return;
@@ -78,12 +80,11 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         return;
       }
 
-      // Create booking
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert([
           {
-            user_id: null, // 🔸 until login system connects users
+            user_id: null,
             flight_id: flight.id,
             booked_at: new Date(),
             status: "confirmed",
@@ -93,18 +94,17 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         .single();
       if (bookingError) throw bookingError;
 
-      // Link booking + seat
       const { error: linkError } = await supabase
         .from("booking_seats")
         .insert([{ booking_id: booking.id, seat_id: seat.id }]);
       if (linkError) throw linkError;
 
-      // Mark seat as booked
       await supabase.from("seats").update({ is_booked: true }).eq("id", seat.id);
 
       alert("Passenger successfully added.");
       loadSeats(flight.id);
       setNewPassenger({ name: "", seat: "" });
+      setError("");
     } catch (err) {
       console.error(err);
       setError("Error adding passenger.");
@@ -137,11 +137,11 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
             Arrival Time:
             <input
               type="datetime-local"
-              value={tempFlight.arrive_time?.slice(0, 16) || ""}
+              value={tempFlight.arrival_time?.slice(0, 16) || ""}
               onChange={(e) =>
                 setTempFlight({
                   ...tempFlight,
-                  arrive_time: e.target.value,
+                  arrival_time: e.target.value,
                 })
               }
             />

@@ -15,8 +15,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-CA", {
 function formatDateTime(isoString) {
   if (!isoString) return "TBD";
 
-  // 👇 Parse as "local" time by replacing the 'T' with a space
-  // and preventing Date() from auto-converting from UTC
   const parts = isoString.replace("T", " ").split(/[- :]/);
   const [year, month, day, hour, minute, second] = parts.map(Number);
 
@@ -27,11 +25,7 @@ function formatDateTime(isoString) {
   return `${date} • ${time}`;
 }
 
-
-
-// ---------- Component ----------
 export default function EmployeeFlightCard({ flight, onEdit }) {
-  console.log(flight)
   const [seatsLeft, setSeatsLeft] = useState(null);
 
   useEffect(() => {
@@ -57,7 +51,6 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
 
   if (!flight) return null;
 
-  // ---------- Derived fields ----------
   const departure = flight.departure_airport || "Unknown Departure";
   const destination = flight.destination_airport || "Unknown Destination";
   const departureTime = formatDateTime(flight.departure_time);
@@ -73,7 +66,6 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
     .replace(/\s+/g, "-")
     .replace(/[^a-z-]/g, "");
 
-  // ---------- UI ----------
   return (
     <article
       className="flight-card"

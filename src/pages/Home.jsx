@@ -21,7 +21,7 @@ export default function Home() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(null);
   
-    useEffect(() => {
+  useEffect(() => {
     async function fetchFlights() {
       const { data, error } = await supabase.from("flights").select("*");
       if (error) {

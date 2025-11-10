@@ -11,14 +11,12 @@ export default function Admin() {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Fetch flights on mount
   useEffect(() => {
     async function fetchFlights() {
       const { data, error } = await supabase.from("flights").select("*");
       if (error) {
         console.error("Error fetching flights:", error);
       } else {
-        console.log("Loaded flights from Supabase:", data);
         setFlights(data);
         setFilteredFlights(data);
       }
@@ -26,9 +24,7 @@ export default function Admin() {
     fetchFlights();
   }, []);
 
-  // Search / filter logic
   const handleSearch = (filters) => {
-    console.log("Filters received:", filters);
     const { departure, destination, date, flightId } = filters || {};
     setHasSearched(true);
 
@@ -66,23 +62,18 @@ export default function Admin() {
       );
     });
 
-    console.log("Filtered results:", filtered);
     setFilteredFlights(filtered);
   };
 
-  // Reset filters
   const handleReset = () => {
-    console.log("Reset filters");
     setFilteredFlights(flights);
     setHasSearched(false);
   };
 
-  // Edit popup
   const handleEdit = (flight) => {
     setSelectedFlight(flight);
   };
 
-  // Save flight updates
   const handleSaveFlight = async (updatedFlight) => {
     try {
       const { error } = await supabase
@@ -101,7 +92,6 @@ export default function Admin() {
 
       if (error) throw error;
 
-      // Update UI
       setFlights((prev) =>
         prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
       );
