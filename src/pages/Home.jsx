@@ -11,7 +11,8 @@ import { supabase } from "../lib/supabaseClient";
 const INITIAL_SEARCH = {
   departure: "",
   arrival: "",
-  date: "",
+  departureDate: "",
+  arrivalDate: "",
 };
 
 export default function Home() {
@@ -42,22 +43,57 @@ export default function Home() {
   function filterFlights() {
     const departureTerm = search.departure.trim().toLowerCase();
     const arrivalTerm = search.arrival.trim().toLowerCase();
-    const dateTerm = search.date.trim();
+    const departureDateTerm = search.departureDate.trim();
+    const arrivalDateTerm = search.arrivalDate.trim();
+
+    const normalizeDate = (value) => {
+      if (!value) return "";
+      if (typeof value === "string" && value.length >= 10) {
+        return value.slice(0, 10);
+      }
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        return "";
+      }
+      return parsed.toISOString().slice(0, 10);
+    };
 
     const filtered = flights.filter((flight) => {
-      const matchesDeparture =
-        !departureTerm ||
-        flight.departure_airport?.toLowerCase?.().includes(departureTerm);
+      const departureAirport =
+        flight.departure_airport?.toLowerCase?.() ??
+        flight.departure?.toLowerCase?.() ??
+        "";
+      const arrivalAirport =
+        flight.destination_airport?.toLowerCase?.() ??
+        flight.destination?.toLowerCase?.() ??
+        "";
 
-      const matchesArrival =
-        !arrivalTerm ||
-        flight.destination_airport?.toLowerCase?.().includes(arrivalTerm);
+      const matchesDeparture = !departureTerm
+        ? true
+        : departureAirport.includes(departureTerm);
 
-      const matchesDate =
-        !dateTerm ||
-        (flight.departureTime && flight.departureTime.startsWith(dateTerm));
+      const matchesArrival = !arrivalTerm
+        ? true
+        : arrivalAirport.includes(arrivalTerm);
 
-      return matchesDeparture && matchesArrival && matchesDate;
+      const departureDateField =
+        flight.departure_time || flight.departureTime || "";
+      const arrivalDateField = flight.arrival_time || flight.arrivalTime || "";
+
+      const matchesDepartureDate = !departureDateTerm
+        ? true
+        : normalizeDate(departureDateField) === departureDateTerm;
+
+      const matchesArrivalDate = !arrivalDateTerm
+        ? true
+        : normalizeDate(arrivalDateField) === arrivalDateTerm;
+
+      return (
+        matchesDeparture &&
+        matchesArrival &&
+        matchesDepartureDate &&
+        matchesArrivalDate
+      );
     });
 
     setResults(filtered);
@@ -83,27 +119,89 @@ export default function Home() {
     setSelectedFlight(null);
   }
 
-  async function handleBookingSubmit() {
+  async function handleBookingSubmit(bookingData) {
+    if (!selectedFlight) {
+      alert("Select a flight before booking.");
+      return;
+    }
+
+    if (!bookingData?.seatId) {
+      alert("Select a seat before confirming your booking.");
+      return;
+    }
+
+    let seatReserved = false;
+    let bookingRecord = null;
     try {
-      const user = (await supabase.auth.getUser()).data.user;
-      const { error } = await supabase.from("bookings").insert([
-        {
-          user_id: user.id,
-          flight_id: selectedFlight.id,
-          status: "confirmed",
-        },
-      ]);
-      if (error) {
-        console.error("Booking failed:", error);
-        alert("Booking failed!");
-      } else {
-        alert("Flight booked successfully!");
+      const { data: userResponse } = await supabase.auth.getUser();
+      const user = userResponse?.user;
+
+      if (!user) {
+        alert("Please sign in before booking.");
+        return;
       }
+
+      const { data: reservedSeat, error: seatReserveError } = await supabase
+        .from("seats")
+        .update({ is_booked: true })
+        .eq("id", bookingData.seatId)
+        .eq("is_booked", false)
+        .select("id")
+        .maybeSingle();
+
+      if (seatReserveError) {
+        throw seatReserveError;
+      }
+
+      if (!reservedSeat) {
+        throw new Error("That seat was just taken. Please pick another seat.");
+      }
+
+      seatReserved = true;
+
+      const { data: booking, error } = await supabase
+        .from("bookings")
+        .insert([
+          {
+            user_id: user.id,
+            flight_id: selectedFlight.id,
+            status: "confirmed",
+            booked_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      bookingRecord = booking;
+
+      const { error: linkError } = await supabase
+        .from("booking_seats")
+        .insert([{ booking_id: booking.id, seat_id: bookingData.seatId }]);
+      if (linkError) {
+        throw linkError;
+      }
+
+      alert(
+        `Flight booked successfully! Seat ${bookingData.seatCode} is reserved for you.`,
+      );
+      handleBookingClose();
     } catch (err) {
       console.error("Unexpected error:", err);
+      if (bookingRecord?.id) {
+        await supabase.from("bookings").delete().eq("id", bookingRecord.id);
+      }
+      if (seatReserved) {
+        await supabase
+          .from("seats")
+          .update({ is_booked: false })
+          .eq("id", bookingData.seatId);
+      }
+      alert(err.message ?? "Booking failed. Please try again.");
     }
   }
-  
 
   return (
     <main>
@@ -154,11 +252,21 @@ function Search({ form, onChange, onSubmit, onReset }) {
           </label>
 
           <label>
-            Date
+            Departure Date
             <input
               type="date"
-              name="date"
-              value={form.date}
+              name="departureDate"
+              value={form.departureDate}
+              onChange={onChange}
+            />
+          </label>
+
+          <label>
+            Arrival Date
+            <input
+              type="date"
+              name="arrivalDate"
+              value={form.arrivalDate}
               onChange={onChange}
             />
           </label>

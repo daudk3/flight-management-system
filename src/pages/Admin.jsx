@@ -76,27 +76,36 @@ export default function Admin() {
 
   const handleSaveFlight = async (updatedFlight) => {
     try {
-      const { error } = await supabase
+      const updates = {
+        departure_time: updatedFlight.departure_time,
+        arrival_time: updatedFlight.arrival_time,
+        price:
+          updatedFlight.price === "" || updatedFlight.price === null
+            ? null
+            : Number(updatedFlight.price),
+        departure_airport: updatedFlight.departure_airport,
+        destination_airport: updatedFlight.destination_airport,
+        gate_num: updatedFlight.gate_num,
+        flight_code: updatedFlight.flight_code,
+        status: updatedFlight.status ?? "On Time",
+      };
+
+      const { data: updatedRow, error } = await supabase
         .from("flights")
-        .update({
-          departure_airport: updatedFlight.departure_airport,
-          destination_airport: updatedFlight.destination_airport,
-          departure_time: updatedFlight.departure_time,
-          arrival_time: updatedFlight.arrival_time,
-          price: updatedFlight.price,
-          gate_num: updatedFlight.gate_num,
-          flight_code: updatedFlight.flight_code,
-          status: updatedFlight.status ?? "On Time",
-        })
-        .eq("id", updatedFlight.id);
+        .update(updates)
+        .eq("id", updatedFlight.id)
+        .select("*")
+        .single();
 
       if (error) throw error;
 
+      const nextFlight = updatedRow ?? { ...updatedFlight, ...updates };
+
       setFlights((prev) =>
-        prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
+        prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
       );
       setFilteredFlights((prev) =>
-        prev.map((f) => (f.id === updatedFlight.id ? updatedFlight : f))
+        prev.map((f) => (f.id === updatedFlight.id ? nextFlight : f))
       );
       setSelectedFlight(null);
       alert("✅ Flight updated successfully!");

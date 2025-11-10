@@ -33,7 +33,8 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
       const { count, error } = await supabase
         .from("bookings")
         .select("id", { count: "exact", head: true })
-        .eq("flight_id", flight.id);
+        .eq("flight_id", flight.id)
+        .eq("status", "confirmed");
 
       if (error) {
         console.error("Error counting bookings:", error);
@@ -53,8 +54,10 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
 
   const departure = flight.departure_airport || "Unknown Departure";
   const destination = flight.destination_airport || "Unknown Destination";
-  const departureTime = formatDateTime(flight.departure_time);
-  const arrivalTime = formatDateTime(flight.arrival_time);
+  const departureTime = formatDateTime(
+    flight.departure_time || flight.departureTime,
+  );
+  const arrivalTime = formatDateTime(flight.arrival_time || flight.arrive_time);
   const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
   const statusLabel = flight.status || "Scheduled";
   const priceDisplay =
@@ -72,20 +75,23 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
       style={{
         border: "1px solid #d1d5db",
         borderRadius: "8px",
-        padding: "1rem",
+        padding: "1.25rem",
         marginBottom: "1rem",
         backgroundColor: "white",
         boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
         transition: "transform 0.1s ease",
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        minHeight: "100%",
       }}
     >
-      {/* Header */}
       <header
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "0.75rem",
+          gap: "1rem",
         }}
       >
         <div>
@@ -120,7 +126,6 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
         </div>
       </header>
 
-      {/* Flight details */}
       <div
         className="flight-card-body"
         style={{
@@ -144,23 +149,29 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
             Seats {seatsLeft !== null ? seatsLeft : "Loading..."}
           </p>
         </div>
+      </div>
 
-        <div style={{ alignSelf: "center" }}>
-          <button
-            onClick={() => onEdit(flight)}
-            style={{
-              padding: "6px 12px",
-              backgroundColor: "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-            }}
-          >
-            Edit
-          </button>
-        </div>
+      <div
+        style={{
+          marginTop: "auto",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <button
+          onClick={() => onEdit(flight)}
+          style={{
+            padding: "0.6rem 1.1rem",
+            backgroundColor: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+          }}
+        >
+          Edit
+        </button>
       </div>
     </article>
   );

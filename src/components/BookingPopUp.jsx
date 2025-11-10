@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./BookingPopUp.css";
+import { supabase } from "../lib/supabaseClient";
 
 const INITIAL_FORM = {
   firstName: "",
@@ -18,6 +19,11 @@ export default function BookingPopUp({
   onSubmit,
 }) {
   const [form, setForm] = useState(INITIAL_FORM);
+  const [seats, setSeats] = useState([]);
+  const [seatLoading, setSeatLoading] = useState(false);
+  const [seatFetchError, setSeatFetchError] = useState("");
+  const [seatSelectionError, setSeatSelectionError] = useState("");
+  const [selectedSeat, setSelectedSeat] = useState(null);
 
   const flightSummary = useMemo(() => {
     if (!flight) {
@@ -71,7 +77,48 @@ export default function BookingPopUp({
         flight?.travelClass?.toLowerCase?.() ?? INITIAL_FORM.travelClass,
       passengers: "1",
     }));
+    setSelectedSeat(null);
+    setSeatSelectionError("");
   }, [isOpen, flight]);
+
+  useEffect(() => {
+    if (!isOpen || !flight?.id) {
+      setSeats([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function fetchSeats() {
+      setSeatLoading(true);
+      setSeatFetchError("");
+      const { data, error } = await supabase
+        .from("seats")
+        .select("id, seat_code, is_booked")
+        .eq("flight_id", flight.id)
+        .order("seat_code", { ascending: true });
+
+      if (!isMounted) return;
+
+      if (error) {
+        setSeatFetchError("We couldn't load the seat map. Please try again.");
+        setSeats([]);
+      } else if (!data?.length) {
+        setSeatFetchError("Seats have not been configured for this flight yet.");
+        setSeats([]);
+      } else {
+        setSeats(data);
+      }
+
+      setSeatLoading(false);
+    }
+
+    fetchSeats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [flight?.id, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -99,16 +146,37 @@ export default function BookingPopUp({
     }
   }
 
-  function handleSubmit(event) {
+  function handleSeatSelect(seat) {
+    if (seat.is_booked) {
+      setSeatSelectionError(`Seat ${seat.seat_code} is already taken.`);
+      return;
+    }
+
+    setSelectedSeat(seat);
+    setSeatSelectionError("");
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
+    if (!selectedSeat) {
+      setSeatSelectionError("Select an available seat before continuing.");
+      return;
+    }
+
     const bookingData = {
       ...form,
       passengers: Number(form.passengers) || 1,
       flight,
+      seatId: selectedSeat.id,
+      seatCode: selectedSeat.seat_code,
     };
 
-    onSubmit?.(bookingData);
-    onClose?.();
+    try {
+      await onSubmit?.(bookingData);
+    } catch (err) {
+      console.error(err);
+      setSeatSelectionError(err.message ?? "Unable to submit booking right now.");
+    }
   }
 
   if (!isOpen) {
@@ -156,6 +224,64 @@ export default function BookingPopUp({
             </p>
           )}
         </header>
+
+        <section className="booking-seat-section">
+          <header className="booking-seat-header">
+            <h3>Select Your Seat</h3>
+            <p>Choose an available seat to continue your booking.</p>
+          </header>
+
+          {seatLoading ? (
+            <p className="booking-seat-hint">Loading seat map…</p>
+          ) : seatFetchError ? (
+            <p className="booking-seat-error">{seatFetchError}</p>
+          ) : (
+            <>
+              <div className="booking-seat-grid" role="listbox" aria-label="Seat map">
+                {seats.map((seat) => {
+                  const isTaken = seat.is_booked;
+                  const isSelected = selectedSeat?.id === seat.id;
+                  return (
+                    <button
+                      type="button"
+                      key={seat.id}
+                      className={`booking-seat ${isTaken ? "taken" : "available"} ${
+                        isSelected ? "selected" : ""
+                      }`}
+                      onClick={() => handleSeatSelect(seat)}
+                      disabled={isTaken}
+                      aria-pressed={isSelected}
+                      aria-label={`Seat ${seat.seat_code}${isTaken ? " (taken)" : ""}`}
+                      role="option"
+                      aria-selected={isSelected}
+                    >
+                      {seat.seat_code}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="booking-seat-legend">
+                <span>
+                  <span className="booking-seat-legend-box available" /> Available
+                </span>
+                <span>
+                  <span className="booking-seat-legend-box taken" /> Taken
+                </span>
+                <span>
+                  <span className="booking-seat-legend-box selected" /> Selected
+                </span>
+              </div>
+              {selectedSeat && !seatSelectionError && (
+                <p className="booking-seat-hint">
+                  Selected seat: {selectedSeat.seat_code}
+                </p>
+              )}
+              {seatSelectionError && (
+                <p className="booking-seat-error">{seatSelectionError}</p>
+              )}
+            </>
+          )}
+        </section>
 
         <form className="booking-popup-form" onSubmit={handleSubmit}>
           <div className="booking-popup-grid">

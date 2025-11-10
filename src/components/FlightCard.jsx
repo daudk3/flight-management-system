@@ -36,7 +36,8 @@ export default function FlightCard({ flight, onSelect }) {
       const { count, error } = await supabase
         .from("bookings")
         .select("id", { count: "exact", head: true })
-        .eq("flight_id", flight.id);
+        .eq("flight_id", flight.id)
+        .eq("status", "confirmed");
 
       if (error) {
         console.error("Error counting bookings:", error);
@@ -64,6 +65,8 @@ export default function FlightCard({ flight, onSelect }) {
       ? flight.price
       : `$${flight.price ?? "N/A"}`;
   const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
+  const departureTimestamp = flight.departure_time || flight.departureTime;
+  const arrivalTimestamp = flight.arrival_time || flight.arrive_time;
 
   function handleClick() {
     onSelect?.(flight);
@@ -105,12 +108,12 @@ export default function FlightCard({ flight, onSelect }) {
       <div className="flight-card-body">
         <div>
           <span className="flight-card-label">Departure</span>
-          <p>{formatDateTime(flight.departure_time)}</p>
+          <p>{formatDateTime(departureTimestamp)}</p>
           <span className="flight-card-meta">{gateLabel}</span>
         </div>
         <div>
           <span className="flight-card-label">Arrival</span>
-          <p>{formatDateTime(flight.arrival_time)}</p>
+          <p>{formatDateTime(arrivalTimestamp)}</p>
           <span className="flight-card-meta">
             Seats {seatsLeft !== null ? seatsLeft : "Loading..."}
           </span>

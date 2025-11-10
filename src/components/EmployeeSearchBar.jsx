@@ -13,10 +13,6 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
     setFilters((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSearchClick() {
-    onSearch?.(filters);
-  }
-
   function handleResetClick() {
     setFilters({
       departure: "",
@@ -27,8 +23,13 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
     onReset?.();
   }
 
+  function handleSubmit(event) {
+    event.preventDefault();
+    onSearch?.(filters);
+  }
+
   return (
-    <div className="employee-searchbar">
+    <form className="employee-searchbar" onSubmit={handleSubmit}>
       <div className="employee-searchbar__field">
         <label className="employee-searchbar__label">Departure</label>
         <input
@@ -74,18 +75,19 @@ export default function EmployeeSearchBar({ onSearch, onReset }) {
 
       <div className="employee-searchbar__actions">
         <button
-          onClick={handleSearchClick}
+          type="submit"
           className="employee-searchbar__button"
         >
           Search
         </button>
         <button
+          type="button"
           onClick={handleResetClick}
           className="employee-searchbar__button reset"
         >
           Reset
         </button>
       </div>
-    </div>
+    </form>
   );
 }

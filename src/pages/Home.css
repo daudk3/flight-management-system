@@ -39,19 +39,19 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap; /* ensures it doesn't overflow on smaller screens */
+  flex-wrap: wrap;
 }
 
-label {
+.flight-form label {
   display: flex;
   flex-direction: column;
-  flex: 1; /* all fields share equal width */
+  flex: 1;
   min-width: 200px;
   font-weight: 500;
   color: #111827;
 }
 
-input {
+.flight-form input {
   margin-top: 0.3rem;
   padding: 0.6rem;
   border: 1px solid #d1d5db;
@@ -59,33 +59,12 @@ input {
   font-size: 1rem;
 }
 
-input:focus {
+.flight-form input:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
-.reset-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.reset-btn {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width: 5.8rem;
-  margin: 0.2rem;
-  flex-shrink: 0; /* prevents button from shrinking on narrow screens */
-  display: flex;
-  align-items: center;      /* vertical centering */
-  justify-content: center;  /* horizontal centering */
-}
-
+.reset-btn,
 .search-btn {
   background-color: #2563eb;
   color: white;
@@ -98,19 +77,20 @@ input:focus {
   transition: background-color 0.2s;
   width: 5.8rem;
   margin: 0.2rem;
-  flex-shrink: 0; /* prevents button from shrinking on narrow screens */
+  flex-shrink: 0;
   display: flex;
-  align-items: center;      /* vertical centering */
-  justify-content: center;  /* horizontal centering */
+  align-items: center;
+  justify-content: center;
 }
 
-.search-btn:hover {
+.search-btn:hover,
+.reset-btn:hover {
   background-color: #1d4ed8;
 }
 
 .form-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-start;
@@ -218,8 +198,14 @@ input:focus {
   margin-top: 0.35rem;
 }
 
+.flightlist-sentinel {
+  height: 1px;
+}
+
 .flight-card-status {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   margin-top: 0.4rem;
   padding: 0.25rem 0.6rem;
   border-radius: 9999px;
@@ -242,4 +228,41 @@ input:focus {
 .flight-card-status.status-full {
   background-color: #fee2e2;
   color: #b91c1c;
+}
+
+.booking-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.booking-cancel-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background-color: #dc2626;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.booking-cancel-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.booking-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.booking-cancelled-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  background-color: #e2e8f0;
+  color: #475569;
+  font-weight: 600;
 }

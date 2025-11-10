@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 
 export default function Bookings() {
   const [trips, setTrips] = useState([]);
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     async function fetchTrips() {
@@ -45,6 +46,66 @@ export default function Bookings() {
 
     fetchTrips();
   }, []);
+
+  async function handleCancelBooking(bookingId) {
+    if (!bookingId) return;
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this booking?",
+    );
+    if (!confirmCancel) return;
+
+    setCancellingId(bookingId);
+    try {
+      const { data: linkedSeats, error: seatLinkError } = await supabase
+        .from("booking_seats")
+        .select("seat_id")
+        .eq("booking_id", bookingId);
+
+      if (seatLinkError) {
+        throw seatLinkError;
+      }
+
+      const seatIds =
+        linkedSeats?.map((seat) => seat.seat_id).filter(Boolean) ?? [];
+
+      const { error: bookingError } = await supabase
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", bookingId);
+      if (bookingError) {
+        throw bookingError;
+      }
+
+      if (seatIds.length > 0) {
+        const { error: seatUpdateError } = await supabase
+          .from("seats")
+          .update({ is_booked: false })
+          .in("id", seatIds);
+        if (seatUpdateError) {
+          throw seatUpdateError;
+        }
+      }
+
+      const { error: deleteLinkError } = await supabase
+        .from("booking_seats")
+        .delete()
+        .eq("booking_id", bookingId);
+      if (deleteLinkError) {
+        throw deleteLinkError;
+      }
+
+      setTrips((prev) =>
+        prev.map((trip) =>
+          trip.id === bookingId ? { ...trip, status: "cancelled" } : trip,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to cancel booking:", error);
+      alert("Unable to cancel booking. Please try again.");
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   return (
     <main className="flightlist">
@@ -112,6 +173,21 @@ export default function Bookings() {
                     {trip.status}
                   </p>
                 </div>
+              </div>
+
+              <div className="booking-card-actions">
+                {trip.status !== "cancelled" ? (
+                  <button
+                    type="button"
+                    className="booking-cancel-btn"
+                    onClick={() => handleCancelBooking(trip.id)}
+                    disabled={cancellingId === trip.id}
+                  >
+                    {cancellingId === trip.id ? "Cancelling…" : "Cancel Booking"}
+                  </button>
+                ) : (
+                  <span className="booking-cancelled-pill">Cancelled</span>
+                )}
               </div>
             </article>
           ))}

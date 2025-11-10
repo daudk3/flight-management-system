@@ -14,7 +14,10 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
       return;
     }
 
-    setTempFlight(JSON.parse(JSON.stringify(flight)));
+    const clone = JSON.parse(JSON.stringify(flight));
+    clone.departure_time = clone.departure_time ?? clone.departureTime ?? "";
+    clone.arrival_time = clone.arrival_time ?? clone.arrive_time ?? "";
+    setTempFlight(clone);
     loadSeats(flight.id);
   }, [flight]);
 
