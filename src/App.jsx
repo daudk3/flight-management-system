@@ -6,6 +6,7 @@ import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
 import CreateAccount from "./pages/CreateAccount";
+import Checkout from "./pages/Checkout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -23,6 +24,7 @@ export default function App() {
               <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/bookings" element={<Bookings />} />
+                <Route path="/checkout" element={<Checkout />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

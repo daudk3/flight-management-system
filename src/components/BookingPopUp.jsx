@@ -5,8 +5,6 @@ import { supabase } from "../lib/supabaseClient";
 const INITIAL_FORM = {
   firstName: "",
   lastName: "",
-  email: "",
-  phone: "",
   passengers: "1",
   travelClass: "economy",
   notes: "",
@@ -23,7 +21,7 @@ export default function BookingPopUp({
   const [seatLoading, setSeatLoading] = useState(false);
   const [seatFetchError, setSeatFetchError] = useState("");
   const [seatSelectionError, setSeatSelectionError] = useState("");
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   const flightSummary = useMemo(() => {
     if (!flight) {
@@ -77,7 +75,7 @@ export default function BookingPopUp({
         flight?.travelClass?.toLowerCase?.() ?? INITIAL_FORM.travelClass,
       passengers: "1",
     }));
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     setSeatSelectionError("");
   }, [isOpen, flight]);
 
@@ -137,6 +135,11 @@ export default function BookingPopUp({
 
   function handleChange(event) {
     const { name, value } = event.target;
+    if (name === "passengers") {
+      const nextCount = Math.max(1, Number(value) || 1);
+      setSelectedSeats((prev) => prev.slice(0, nextCount));
+      setSeatSelectionError("");
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -146,20 +149,44 @@ export default function BookingPopUp({
     }
   }
 
+  const passengerCount = Math.max(1, Number(form.passengers) || 1);
+
   function handleSeatSelect(seat) {
     if (seat.is_booked) {
       setSeatSelectionError(`Seat ${seat.seat_code} is already taken.`);
       return;
     }
 
-    setSelectedSeat(seat);
     setSeatSelectionError("");
+
+    setSelectedSeats((prev) => {
+      const alreadySelected = prev.some((s) => s.id === seat.id);
+      if (alreadySelected) {
+        return prev.filter((s) => s.id !== seat.id);
+      }
+
+      if (prev.length >= passengerCount) {
+        setSeatSelectionError(
+          `You can select up to ${passengerCount} seat${passengerCount > 1 ? "s" : ""}.`,
+        );
+        return prev;
+      }
+
+      return [...prev, seat];
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!selectedSeat) {
-      setSeatSelectionError("Select an available seat before continuing.");
+    if (!selectedSeats.length) {
+      setSeatSelectionError("Select at least one seat before continuing.");
+      return;
+    }
+
+    if (selectedSeats.length !== passengerCount) {
+      setSeatSelectionError(
+        `Select ${passengerCount} seat${passengerCount > 1 ? "s" : ""} to match your passenger count.`,
+      );
       return;
     }
 
@@ -167,8 +194,8 @@ export default function BookingPopUp({
       ...form,
       passengers: Number(form.passengers) || 1,
       flight,
-      seatId: selectedSeat.id,
-      seatCode: selectedSeat.seat_code,
+      seatIds: selectedSeats.map((seat) => seat.id),
+      seatCodes: selectedSeats.map((seat) => seat.seat_code),
     };
 
     try {
@@ -227,8 +254,8 @@ export default function BookingPopUp({
 
         <section className="booking-seat-section">
           <header className="booking-seat-header">
-            <h3>Select Your Seat</h3>
-            <p>Choose an available seat to continue your booking.</p>
+            <h3>Select Your Seats</h3>
+            <p>Choose enough available seats for everyone in your party.</p>
           </header>
 
           {seatLoading ? (
@@ -240,7 +267,7 @@ export default function BookingPopUp({
               <div className="booking-seat-grid" role="listbox" aria-label="Seat map">
                 {seats.map((seat) => {
                   const isTaken = seat.is_booked;
-                  const isSelected = selectedSeat?.id === seat.id;
+                  const isSelected = selectedSeats.some((s) => s.id === seat.id);
                   return (
                     <button
                       type="button"
@@ -271,9 +298,10 @@ export default function BookingPopUp({
                   <span className="booking-seat-legend-box selected" /> Selected
                 </span>
               </div>
-              {selectedSeat && !seatSelectionError && (
+              {!!selectedSeats.length && !seatSelectionError && (
                 <p className="booking-seat-hint">
-                  Selected seat: {selectedSeat.seat_code}
+                  Selected seats ({selectedSeats.length}/{passengerCount}):{" "}
+                  {selectedSeats.map((seat) => seat.seat_code).join(", ")}
                 </p>
               )}
               {seatSelectionError && (
@@ -305,27 +333,6 @@ export default function BookingPopUp({
                 onChange={handleChange}
                 placeholder="e.g. Johnson"
                 required
-              />
-            </label>
-            <label>
-              Email
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="alex@example.com"
-                required
-              />
-            </label>
-            <label>
-              Phone
-              <input
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="+1 555-123-4567"
               />
             </label>
             <label>

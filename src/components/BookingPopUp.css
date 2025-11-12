@@ -231,6 +231,7 @@
   font-size: 0.85rem;
   color: #475569;
   flex-wrap: wrap;
+}
 .booking-seat-legend-box {
   display: inline-flex;
   width: 14px;
