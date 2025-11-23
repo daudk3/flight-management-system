@@ -105,13 +105,22 @@ export default function Checkout() {
       return;
     }
 
-    if (!payment.cardName || !payment.cardNumber || !payment.expiry || !payment.cvv) {
-      setErrorMessage("Add the name on card, number, expiry, and CVV to continue.");
+    if (
+      !payment.cardName ||
+      !payment.cardNumber ||
+      !payment.expiry ||
+      !payment.cvv
+    ) {
+      setErrorMessage(
+        "Add the name on card, number, expiry, and CVV to continue."
+      );
       return;
     }
 
     if (!payment.agree) {
-      setErrorMessage("Please accept the fare rules and privacy notice to continue.");
+      setErrorMessage(
+        "Please accept the fare rules and privacy notice to continue."
+      );
       return;
     }
 
@@ -121,7 +130,9 @@ export default function Checkout() {
     }
 
     if (!booking.seatIds?.length) {
-      setErrorMessage("Seat selection is missing. Please choose your seats again.");
+      setErrorMessage(
+        "Seat selection is missing. Please choose your seats again."
+      );
       return;
     }
 
@@ -133,7 +144,8 @@ export default function Checkout() {
     let reservedSeatIds = [];
 
     try {
-      const { data: userResponse, error: userError } = await supabase.auth.getUser();
+      const { data: userResponse, error: userError } =
+        await supabase.auth.getUser();
       if (userError) {
         throw userError;
       }
@@ -156,7 +168,9 @@ export default function Checkout() {
       reservedSeatIds = seatRows?.map((seat) => seat.id) ?? [];
 
       if (reservedSeatIds.length !== booking.seatIds.length) {
-        throw new Error("One or more of your seats was just taken. Please pick different seats.");
+        throw new Error(
+          "One or more of your seats was just taken. Please pick different seats."
+        );
       }
 
       const { data: bookingInsert, error: bookingError } = await supabase
@@ -199,7 +213,9 @@ export default function Checkout() {
     } catch (error) {
       console.error("Checkout failed", error);
       setInfoMessage("");
-      setErrorMessage(error.message ?? "Unable to complete your booking right now.");
+      setErrorMessage(
+        error.message ?? "Unable to complete your booking right now."
+      );
 
       if (bookingRecord?.id) {
         await supabase.from("bookings").delete().eq("id", bookingRecord.id);
@@ -237,8 +253,12 @@ export default function Checkout() {
   const readableSeats = booking.seatCodes?.length
     ? booking.seatCodes.join(", ")
     : "Pending";
-  const departureLabel = formatDateTime(flight?.departure_time || flight?.departureTime);
-  const arrivalLabel = formatDateTime(flight?.arrival_time || flight?.arrivalTime);
+  const departureLabel = formatDateTime(
+    flight?.departure_time || flight?.departureTime
+  );
+  const arrivalLabel = formatDateTime(
+    flight?.arrival_time || flight?.arrivalTime
+  );
 
   return (
     <main className="checkout-page">
@@ -262,7 +282,7 @@ export default function Checkout() {
             <div>
               <p className="checkout-step">Trip summary</p>
               <h2>
-                {flight?.departure_airport || flight?.departure} → {" "}
+                {flight?.departure_airport || flight?.departure} →{" "}
                 {flight?.destination_airport || flight?.destination}
               </h2>
             </div>
@@ -380,9 +400,7 @@ export default function Checkout() {
                 checked={payment.agree}
                 onChange={handlePaymentChange}
               />
-              <span>
-                I agree to the carrier fare rules and privacy policy.
-              </span>
+              <span>I agree to the carrier fare rules and privacy policy.</span>
             </label>
 
             {errorMessage && <p className="checkout-error">{errorMessage}</p>}
@@ -390,11 +408,7 @@ export default function Checkout() {
               <p className="checkout-hint">{infoMessage}</p>
             )}
 
-            <button
-              type="submit"
-              className="btn primary"
-              disabled={processing}
-            >
+            <button type="submit" className="btn primary" disabled={processing}>
               {processing ? "Confirming…" : "Complete purchase"}
             </button>
           </form>

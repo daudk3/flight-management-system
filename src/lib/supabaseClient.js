@@ -10,6 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Returns an object with `ok` and `error`
  */
 export async function testSupabaseConnection() {
+  console.log(import.meta.env.VITE_SUPABASE_URL);
   if (!supabaseUrl || !supabaseAnonKey) {
     return {
       ok: false,

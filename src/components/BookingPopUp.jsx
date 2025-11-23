@@ -10,6 +10,30 @@ const INITIAL_FORM = {
   notes: "",
 };
 
+function parseSeatCode(code = "") {
+  const rowMatch = code.match(/(\d+)/);
+  const row = rowMatch ? Number(rowMatch[1]) : Number.MAX_SAFE_INTEGER;
+  const letter = code.replace(/\d+/g, "") || "";
+  return { row, letter };
+}
+
+function sortSeatRows(seatA, seatB) {
+  const aParsed = parseSeatCode(seatA.seat_code || "");
+  const bParsed = parseSeatCode(seatB.seat_code || "");
+  if (aParsed.row !== bParsed.row) {
+    return aParsed.row - bParsed.row;
+  }
+  if (aParsed.letter && bParsed.letter) {
+    return aParsed.letter.localeCompare(bParsed.letter, undefined, {
+      sensitivity: "base",
+    });
+  }
+  return (seatA.seat_code || "").localeCompare(seatB.seat_code || "", undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
 export default function BookingPopUp({
   isOpen = false,
   flight = null,
@@ -105,7 +129,7 @@ export default function BookingPopUp({
         setSeatFetchError("Seats have not been configured for this flight yet.");
         setSeats([]);
       } else {
-        setSeats(data);
+        setSeats([...data].sort(sortSeatRows));
       }
 
       setSeatLoading(false);
@@ -135,12 +159,8 @@ export default function BookingPopUp({
 
   function handleChange(event) {
     const { name, value } = event.target;
-    if (name === "passengers") {
-      const nextCount = Math.max(1, Number(value) || 1);
-      setSelectedSeats((prev) => prev.slice(0, nextCount));
-      setSeatSelectionError("");
-    }
     setForm((prev) => ({ ...prev, [name]: value }));
+    setSeatSelectionError("");
   }
 
   function handleOverlayClick(event) {
@@ -149,7 +169,10 @@ export default function BookingPopUp({
     }
   }
 
-  const passengerCount = Math.max(1, Number(form.passengers) || 1);
+  const passengerCount = Math.max(
+    selectedSeats.length,
+    Number(form.passengers) || 1,
+  );
 
   function handleSeatSelect(seat) {
     if (seat.is_booked) {
@@ -165,16 +188,33 @@ export default function BookingPopUp({
         return prev.filter((s) => s.id !== seat.id);
       }
 
-      if (prev.length >= passengerCount) {
-        setSeatSelectionError(
-          `You can select up to ${passengerCount} seat${passengerCount > 1 ? "s" : ""}.`,
-        );
-        return prev;
-      }
-
-      return [...prev, seat];
+      const next = [...prev, seat];
+      setForm((formState) => ({
+        ...formState,
+        passengers: String(Math.max(next.length, Number(formState.passengers) || 1)),
+      }));
+      return next;
     });
   }
+
+  const seatGroups = useMemo(() => {
+    const grouped = {};
+    seats.forEach((seat) => {
+      const { letter } = parseSeatCode(seat.seat_code);
+      const key = letter || "?";
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+      grouped[key].push(seat);
+    });
+
+    return Object.entries(grouped)
+      .sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+      .map(([letter, groupSeats]) => ({
+        letter,
+        seats: groupSeats.sort(sortSeatRows),
+      }));
+  }, [seats]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -183,16 +223,10 @@ export default function BookingPopUp({
       return;
     }
 
-    if (selectedSeats.length !== passengerCount) {
-      setSeatSelectionError(
-        `Select ${passengerCount} seat${passengerCount > 1 ? "s" : ""} to match your passenger count.`,
-      );
-      return;
-    }
-
+    const passengerCount = selectedSeats.length;
     const bookingData = {
       ...form,
-      passengers: Number(form.passengers) || 1,
+      passengers: passengerCount,
       flight,
       seatIds: selectedSeats.map((seat) => seat.id),
       seatCodes: selectedSeats.map((seat) => seat.seat_code),
@@ -254,8 +288,8 @@ export default function BookingPopUp({
 
         <section className="booking-seat-section">
           <header className="booking-seat-header">
-            <h3>Select Your Seats</h3>
-            <p>Choose enough available seats for everyone in your party.</p>
+          <h3>Select Your Seats</h3>
+            <p>Select as many available seats as you need. Passenger count updates automatically.</p>
           </header>
 
           {seatLoading ? (
@@ -264,28 +298,33 @@ export default function BookingPopUp({
             <p className="booking-seat-error">{seatFetchError}</p>
           ) : (
             <>
-              <div className="booking-seat-grid" role="listbox" aria-label="Seat map">
-                {seats.map((seat) => {
-                  const isTaken = seat.is_booked;
-                  const isSelected = selectedSeats.some((s) => s.id === seat.id);
-                  return (
-                    <button
-                      type="button"
-                      key={seat.id}
-                      className={`booking-seat ${isTaken ? "taken" : "available"} ${
-                        isSelected ? "selected" : ""
-                      }`}
-                      onClick={() => handleSeatSelect(seat)}
-                      disabled={isTaken}
-                      aria-pressed={isSelected}
-                      aria-label={`Seat ${seat.seat_code}${isTaken ? " (taken)" : ""}`}
-                      role="option"
-                      aria-selected={isSelected}
-                    >
-                      {seat.seat_code}
-                    </button>
-                  );
-                })}
+              <div className="booking-seat-columns" role="listbox" aria-label="Seat map">
+                {seatGroups.map((group) => (
+                  <div key={group.letter} className="booking-seat-column">
+                    <p className="seat-column-label">{group.letter || "?"}</p>
+                    {group.seats.map((seat) => {
+                      const isTaken = seat.is_booked;
+                      const isSelected = selectedSeats.some((s) => s.id === seat.id);
+                      return (
+                        <button
+                          type="button"
+                          key={seat.id}
+                          className={`booking-seat ${isTaken ? "taken" : "available"} ${
+                            isSelected ? "selected" : ""
+                          }`}
+                          onClick={() => handleSeatSelect(seat)}
+                          disabled={isTaken}
+                          aria-pressed={isSelected}
+                          aria-label={`Seat ${seat.seat_code}${isTaken ? " (taken)" : ""}`}
+                          role="option"
+                          aria-selected={isSelected}
+                        >
+                          {seat.seat_code}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
               <div className="booking-seat-legend">
                 <span>
@@ -294,10 +333,13 @@ export default function BookingPopUp({
                 <span>
                   <span className="booking-seat-legend-box taken" /> Taken
                 </span>
-                <span>
-                  <span className="booking-seat-legend-box selected" /> Selected
-                </span>
-              </div>
+              <span>
+                <span className="booking-seat-legend-box selected" /> Selected
+              </span>
+            </div>
+              <p className="booking-seat-hint">
+                Passengers (auto): {Math.max(1, selectedSeats.length)}
+              </p>
               {!!selectedSeats.length && !seatSelectionError && (
                 <p className="booking-seat-hint">
                   Selected seats ({selectedSeats.length}/{passengerCount}):{" "}
@@ -332,18 +374,6 @@ export default function BookingPopUp({
                 value={form.lastName}
                 onChange={handleChange}
                 placeholder="e.g. Johnson"
-                required
-              />
-            </label>
-            <label>
-              Passengers
-              <input
-                name="passengers"
-                type="number"
-                min="1"
-                max="9"
-                value={form.passengers}
-                onChange={handleChange}
                 required
               />
             </label>
