@@ -2,12 +2,18 @@ import { useEffect, useState } from "react";
 import "./editFlightPopup.css";
 import { updateFlight } from "../utils";
 import { supabase } from "../lib/supabaseClient";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+
 
 export default function EditFlightPopup({ flight, onClose, onSave }) {
   const [tempFlight, setTempFlight] = useState(null);
   const [error, setError] = useState("");
   const [newPassenger, setNewPassenger] = useState({ name: "", seat: "" });
   const [seats, setSeats] = useState([]);
+  const [userQuery, setUserQuery] = useState("");
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+
 
   useEffect(() => {
     if (!flight) {
@@ -15,8 +21,15 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
     }
 
     const clone = JSON.parse(JSON.stringify(flight));
-    clone.departure_time = clone.departure_time ?? clone.departureTime ?? "";
-    clone.arrival_time = clone.arrival_time ?? clone.arrive_time ?? "";
+    clone.departure_time = clone.departure_time ?? "";
+    clone.arrival_time = clone.arrival_time ?? "";
+    clone.departure_airport = clone.departure_airport ?? "";
+    clone.destination_airport = clone.destination_airport ?? "";
+    clone.gate_num = clone.gate_num ?? "";
+    clone.flight_code = clone.flight_code ?? "";
+    clone.price = clone.price ?? "";
+    clone.status = clone.status ?? ""
+    
     setTempFlight(clone);
     loadSeats(flight.id);
   }, [flight]);
@@ -46,6 +59,9 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         departure_time: tempFlight.departure_time,
         arrival_time: tempFlight.arrival_time,
         price: tempFlight.price,
+        gate_num: tempFlight.gate_num,
+        status: tempFlight.status
+
       });
       onSave(tempFlight);
       onClose();
@@ -54,6 +70,136 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
       alert("Error saving flight changes.");
     }
   }
+
+  async function handleGenerateReport() {
+    
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      let y = 760;
+
+      function writeLine(text, size = 12, offset = 20) {
+        page.drawText(text, {
+          x: 40,
+          y,
+          size,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        y -= offset;
+      }
+
+    
+      writeLine(`Flight Report`, 22, 30);
+      writeLine(`Flight: ${flight.flight_code} (${flight.id})`, 16, 25);
+
+      
+      writeLine(`Departure Airport: ${flight.departure_airport}`);
+      writeLine(`Destination Airport: ${flight.destination_airport}`);
+      writeLine(`Gate: ${flight.gate_num || "N/A"}`);
+      writeLine(`Price: $${flight.price}`);
+      write(`Status: ${flight.status}`);
+
+      writeLine(
+        `Departure Time: ${
+          tempFlight.departure_time
+            ? new Date(tempFlight.departure_time).toLocaleString()
+            : "N/A"
+        }`
+      );
+
+      writeLine(
+        `Arrival Time: ${
+          tempFlight.arrival_time
+            ? new Date(tempFlight.arrival_time).toLocaleString()
+            : "N/A"
+        }`
+      );
+
+      y -= 20;
+      writeLine("Seat Map", 18, 25);
+
+      const cols = 4;
+      const colWidth = 130;
+
+      let startY = y;
+
+      seats
+        .slice()
+        .sort((a, b) => {
+          const [, letterA = "", numberA = "0"] =
+            /([A-Za-z]+)(\d+)/.exec(a.seat_code ?? "") || [];
+          const [, letterB = "", numberB = "0"] =
+            /([A-Za-z]+)(\d+)/.exec(b.seat_code ?? "") || [];
+          const letterDiff = letterA.localeCompare(letterB);
+          if (letterDiff !== 0) return letterDiff;
+          return Number(numberA) - Number(numberB);
+        })
+        .forEach((s, i) => {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+
+          const x = 40 + col * colWidth;
+          const rowY = startY - row * 16;
+
+          if (rowY < 40) {
+            const newPage = pdfDoc.addPage([600, 800]);
+            page = newPage;
+            startY = 760;
+          }
+
+          page.drawText(
+            `${s.seat_code}: ${s.is_booked ? "BOOKED" : "AVAILABLE"}`,
+            {
+              x: x,
+              y: rowY,
+              size: 12,
+              font,
+              color: rgb(0, 0, 0),
+            }
+          );
+        });
+
+      y = startY - Math.ceil(seats.length / cols) * 16 - 20;
+
+
+    
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+
+    } catch (err) {
+      console.error("PDF error:", err);
+      alert("Failed to generate report.");
+    }
+}
+  async function searchUsers(text) {
+    setUserQuery(text);
+    setSelectedUser(null);
+
+    if (text.trim().length < 2) {
+      setSuggestedUsers([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .ilike("full_name", `%${text}%`)
+      .limit(5);
+
+    if (error) {
+      console.error("User search error:", error);
+      return;
+    }
+
+    setSuggestedUsers(data);
+  }
+
 
   function handleSeatClick(seatCode) {
     if (takenSeats.includes(seatCode)) {
@@ -65,8 +211,12 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
   }
 
   async function handleAddPassenger() {
-    if (!newPassenger.name || !newPassenger.seat) {
-      setError("Enter passenger name and select a seat.");
+    if (!selectedUser) {
+      setError("Select a user account before adding a passenger.");
+      return;
+    }
+    if (!newPassenger.seat) {
+      setError("Select a seat.");
       return;
     }
 
@@ -82,12 +232,11 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         setError("Seat not found.");
         return;
       }
-
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert([
           {
-            user_id: null,
+            user_id: selectedUser.id,
             flight_id: flight.id,
             booked_at: new Date(),
             status: "confirmed",
@@ -95,24 +244,32 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
         ])
         .select()
         .single();
+
       if (bookingError) throw bookingError;
+      await supabase.from("booking_seats").insert([
+        { booking_id: booking.id, seat_id: seat.id },
+      ]);
 
-      const { error: linkError } = await supabase
-        .from("booking_seats")
-        .insert([{ booking_id: booking.id, seat_id: seat.id }]);
-      if (linkError) throw linkError;
+      await supabase
+        .from("seats")
+        .update({ is_booked: true })
+        .eq("id", seat.id);
 
-      await supabase.from("seats").update({ is_booked: true }).eq("id", seat.id);
+      alert(`Passenger added to flight as: ${selectedUser.full_name}`);
 
-      alert("Passenger successfully added.");
-      loadSeats(flight.id);
+      setSelectedUser(null);
+      setUserQuery("");
+      setSuggestedUsers([]);
       setNewPassenger({ name: "", seat: "" });
+      loadSeats(flight.id);
       setError("");
+
     } catch (err) {
       console.error(err);
       setError("Error adding passenger.");
     }
-  }
+}
+
 
   return (
     <div className="popup-overlay">
@@ -151,6 +308,20 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
           </label>
 
           <label>
+            Gate:
+            <input
+              type="string"
+              value={tempFlight.gate_num || ""}
+              onChange={(e) =>
+                setTempFlight({
+                  ...tempFlight,
+                  gate_num: e.target.value,
+                })
+              }
+            />
+          </label>
+
+          <label>
             Price:
             <input
               type="number"
@@ -159,6 +330,21 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
                 setTempFlight({ ...tempFlight, price: e.target.value })
               }
             />
+          </label>
+
+          <label>
+            Status:
+            <select
+              value={tempFlight.status || "On Time"}
+              onChange={(e) =>
+                setTempFlight({ ...tempFlight, status: e.target.value })
+              }
+            >
+              <option value="On Time">On Time</option>
+              <option value="Delayed">Delayed</option>
+              <option value="Canceled">Canceled</option>
+              <option value="Full">Full</option>
+            </select>
           </label>
         </div>
 
@@ -192,26 +378,56 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
 
         <div className="section">
           <h3>Add Passenger</h3>
-          <input
-            type="text"
-            placeholder="Full name"
-            value={newPassenger.name}
-            onChange={(e) =>
-              setNewPassenger({ ...newPassenger, name: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Seat"
-            value={newPassenger.seat}
-            readOnly
-          />
+
+          <label>
+            Search Passenger:
+            <input
+              type="text"
+              value={userQuery}
+              onChange={(e) => searchUsers(e.target.value)}
+              placeholder="Type 2+ letters…"
+            />
+          </label>
+
+          {suggestedUsers.length > 0 && (
+            <div className="user-dropdown">
+              {suggestedUsers.map((u) => (
+                <div
+                  key={u.id}
+                  className="user-option"
+                  onClick={() => {
+                    setSelectedUser(u);
+                    setUserQuery(u.full_name);
+                    setSuggestedUsers([]);
+                  }}
+                >
+                  {u.full_name}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedUser && (
+            <p className="selected-user">
+              Selected: <strong>{selectedUser.full_name}</strong>
+            </p>
+          )}
+
+          <label>
+            Seat:
+            <input type="text" value={newPassenger.seat} readOnly />
+          </label>
+
           <button className="btn add-btn" onClick={handleAddPassenger}>
             Add Passenger
           </button>
+
         </div>
 
         <div className="button-row">
+          <button className="btn report-btn" onClick={handleGenerateReport}>
+            Generate Flight Report
+          </button>
           <button className="btn save-btn" onClick={handleSave}>
             Save Changes
           </button>

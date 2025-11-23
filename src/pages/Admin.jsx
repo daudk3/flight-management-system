@@ -95,7 +95,7 @@ const handleSaveFlight = async (updatedFlight) => {
       .update(updates)
       .eq("id", updatedFlight.id)
       .select("*")
-      .maybeSingle(); // ✅ prevents error when no row is returned
+      .maybeSingle();
 
     if (error) throw error;
 

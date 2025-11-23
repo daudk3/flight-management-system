@@ -59,12 +59,12 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
   );
   const arrivalTime = formatDateTime(flight.arrival_time || flight.arrive_time);
   const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
-  const statusLabel = flight.status || "Scheduled";
+  const status = flight.status || "On Time";
   const priceDisplay =
     typeof flight.price === "string" && flight.price.trim().length > 0
       ? flight.price
       : `$${flight.price ?? "N/A"}`;
-  const statusClass = statusLabel
+  const statusClass = status
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z-]/g, "");
@@ -112,16 +112,20 @@ export default function EmployeeFlightCard({ flight, onEdit }) {
             style={{
               fontSize: "0.85rem",
               color:
-                statusLabel === "Delayed"
+                status === "Delayed"
                   ? "#eab308"
-                  : statusLabel === "Full"
+                  : status === "Full"
                   ? "#ef4444"
+                  : status === "Cancelled"
+                  ? "#6b7280"
+                  : status === "On Time"
+                  ? "#16a34a"
                   : "#16a34a",
               fontWeight: "500",
               marginTop: "0.2rem",
             }}
           >
-            {statusLabel}
+            {status}
           </p>
         </div>
       </header>
