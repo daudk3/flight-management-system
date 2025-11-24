@@ -12,8 +12,8 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
-    "@stripe/react-stripe-js": "^2.9.0",
-    "@stripe/stripe-js": "^4.8.0",
+    "@stripe/react-stripe-js": "^5.4.0",
+    "@stripe/stripe-js": "^8.5.2",
     "@supabase/supabase-js": "2.80.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
