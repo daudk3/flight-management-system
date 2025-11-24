@@ -100,7 +100,7 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
       writeLine(`Destination Airport: ${flight.destination_airport}`);
       writeLine(`Gate: ${flight.gate_num || "N/A"}`);
       writeLine(`Price: $${flight.price}`);
-      write(`Status: ${flight.status}`);
+      writeLine(`Status: ${flight.status}`);
 
       writeLine(
         `Departure Time: ${
