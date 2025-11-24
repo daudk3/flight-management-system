@@ -21,6 +21,19 @@ body {
   color: var(--text-strong);
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--app-bg);
+}
+
+.app-main {
+  flex: 1 0 auto;
+  padding: 1.5rem;
+  background-color: var(--app-bg);
+}
+
 body.high-contrast {
   --app-bg: #0b1120;
   --surface: #0f172a;
