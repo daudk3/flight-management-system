@@ -1,10 +1,212 @@
 :root {
+  --text-scale: 1;
+  --app-bg: #f9fafb;
+  --surface: #ffffff;
+  --surface-strong: #e5e7eb;
+  --text-strong: #0f172a;
+  --text-muted: #475569;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color: #000000; /* Tailwind gray-900 */
-  background-color: #f9fafb; /* Tailwind gray-50 */
+  color: var(--text-strong);
+  background-color: var(--app-bg);
+  font-size: calc(16px * var(--text-scale));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: var(--app-bg);
+  color: var(--text-strong);
+}
+
+body.high-contrast {
+  --app-bg: #0b1120;
+  --surface: #0f172a;
+  --surface-strong: #38bdf8;
+  --text-strong: #f8fafc;
+  --text-muted: #cbd5f5;
+  --accent-strong: #22d3ee;
+  --accent-dark: #0284c7;
+  color: var(--text-strong);
+  background-color: var(--app-bg);
+}
+
+body.high-contrast .navbar {
+  background-color: var(--accent-dark);
+  color: #0b1120;
+}
+
+body.high-contrast .navbar-logo {
+  color: #0b1120;
+}
+
+body.high-contrast .btn,
+body.high-contrast .search-btn,
+body.high-contrast .reset-btn {
+  background-color: var(--accent-strong) !important;
+  color: #0b1120 !important;
+  border: 1px solid #a5f3fc;
+  box-shadow: 0 0 0 2px rgba(165, 243, 252, 0.35);
+}
+
+body.high-contrast .btn:hover,
+body.high-contrast .search-btn:hover,
+body.high-contrast .reset-btn:hover {
+  background-color: #67e8f9 !important;
+}
+
+body.high-contrast .home,
+body.high-contrast .flightlist,
+body.high-contrast .signin-card,
+body.high-contrast .employee-searchbar,
+body.high-contrast .booking-popup {
+  background-color: var(--surface) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--surface-strong) !important;
+  box-shadow: 0 10px 30px rgba(34, 211, 238, 0.15);
+}
+
+body.high-contrast input,
+body.high-contrast select,
+body.high-contrast textarea {
+  background-color: #0b253d;
+  color: #f8fafc;
+  border-color: var(--accent-strong);
+}
+
+body.high-contrast .flightlist-count {
+  background-color: #13263f;
+  color: var(--text-strong);
+  border: 1px solid var(--accent-strong);
+}
+
+body.high-contrast .flight-card {
+  background-color: var(--surface) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--accent-strong) !important;
+  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.15) !important;
+}
+
+body.high-contrast .flight-card h3,
+body.high-contrast .flight-card-price,
+body.high-contrast .flight-card-body {
+  color: var(--text-strong) !important;
+}
+
+body.high-contrast .flight-card-label,
+body.high-contrast .flight-card-subtitle,
+body.high-contrast .flight-card-meta {
+  color: var(--text-muted) !important;
+}
+
+body.high-contrast .flight-card-subtitle,
+body.high-contrast .flight-card-meta,
+body.high-contrast .flight-card-label,
+body.high-contrast .booking-seat-hint,
+body.high-contrast .booking-seat-error {
+  color: var(--text-muted) !important;
+}
+
+body.high-contrast .flight-card-status {
+  background-color: var(--accent-strong) !important;
+  color: #0b1120 !important;
+}
+
+body.high-contrast .flightlist-empty {
+  background-color: #13263f !important;
+  border-color: var(--accent-strong) !important;
+  color: #e0f2fe !important;
+}
+
+body.high-contrast .booking-seat-legend {
+  color: var(--text-muted) !important;
+}
+
+body.high-contrast .booking-seat.available {
+  background-color: #172554;
+  color: #e0f2fe;
+}
+
+body.high-contrast .booking-seat.selected {
+  background-color: var(--accent-strong);
+  color: #0b1120;
+}
+
+body.high-contrast .booking-seat.taken {
+  background-color: #1f2937;
+  color: #94a3b8;
+}
+
+body.high-contrast .booking-seat-legend-box.available {
+  background-color: #22d3ee;
+}
+
+body.high-contrast .booking-seat-legend-box.taken {
+  background-color: #475569;
+}
+
+body.high-contrast .booking-seat-legend-box.selected {
+  background-color: #0ea5e9;
+}
+
+body.high-contrast .booking-popup-overlay {
+  background-color: rgba(8, 47, 73, 0.8);
+}
+
+body.high-contrast .booking-receipt-btn {
+  background-color: var(--accent-strong);
+  color: #0b1120;
+  border-color: #a5f3fc;
+  box-shadow: 0 0 0 2px rgba(165, 243, 252, 0.3);
+}
+
+body.high-contrast .booking-receipt-btn:hover:not(:disabled) {
+  background-color: #67e8f9;
+}
+
+body.high-contrast .booking-cancel-btn {
+  background-color: #f97316;
+  color: #0b1120;
+}
+
+body.high-contrast .booking-cancel-btn:hover:not(:disabled) {
+  background-color: #fb923c;
+}
+
+body.high-contrast .settings-card {
+  background-color: var(--surface);
+  color: var(--text-strong);
+  border-color: var(--accent-strong);
+  box-shadow: 0 12px 26px rgba(34, 211, 238, 0.16);
+}
+
+body.high-contrast .settings-toggle {
+  background-color: #13263f;
+  color: var(--text-strong);
+  border-color: var(--accent-strong);
+}
+
+body.high-contrast .settings-chip {
+  background-color: #0f172a;
+  color: var(--text-strong);
+  border-color: var(--accent-strong);
+}
+
+body.high-contrast .settings-chip.active,
+body.high-contrast .settings-chip:hover {
+  background-color: #13263f;
+}
+
+body.high-contrast .settings-preview {
+  background-color: #13263f;
+  color: var(--text-strong);
+  border-color: var(--accent-strong);
+}
+
+body.high-contrast .settings-badge {
+  background-color: #0ea5e9;
+  border-color: #38bdf8;
+  color: #0b1120;
 }

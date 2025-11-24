@@ -6,6 +6,7 @@ import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
 import CreateAccount from "./pages/CreateAccount";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -27,6 +28,10 @@ export default function App() {
 
               <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                 <Route path="/admin" element={<Admin />} />
+              </Route>
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/settings" element={<Settings />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />

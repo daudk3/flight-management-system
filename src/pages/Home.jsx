@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import "./Home.css";
 import FlightList from "../components/FlightList";
 import BookingPopUp from "../components/BookingPopUp";
+import NarrationButton from "../components/NarrationButton";
 import { supabase } from "../lib/supabaseClient";
 
 const INITIAL_SEARCH = {
@@ -225,7 +226,14 @@ export default function Home() {
 function Search({ form, onChange, onSubmit, onReset }) {
   return (
     <section className="home">
-      <h2 className="home-title">Search Flights</h2>
+      <div className="section-heading">
+        <h2 className="home-title">Search Flights</h2>
+        <NarrationButton
+          text="Search for flights by adding your departure, arrival, and dates, then press search."
+          label="Hear how to search flights"
+          small
+        />
+      </div>
 
       <form className="flight-form" onSubmit={onSubmit}>
         <div className="form-row">

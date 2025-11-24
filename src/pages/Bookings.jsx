@@ -3,11 +3,14 @@ TODO
 User can list/manage bookings (trips)
 */
 import { useEffect, useState } from "react";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabase } from "../lib/supabaseClient";
+import NarrationButton from "../components/NarrationButton";
 
 export default function Bookings() {
   const [trips, setTrips] = useState([]);
   const [cancellingId, setCancellingId] = useState(null);
+  const [generatingId, setGeneratingId] = useState(null);
 
   useEffect(() => {
     async function fetchTrips() {
@@ -107,10 +110,130 @@ export default function Bookings() {
     }
   }
 
+  function formatDateTime(value) {
+    if (!value) return "TBD";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return String(value);
+    return parsed.toLocaleString();
+  }
+
+  function safeText(value) {
+    const str = value == null ? "" : String(value);
+    return str.replace(/[^\r\n\x20-\x7E]/g, " ");
+  }
+
+  async function handleGenerateReceipt(trip) {
+    if (!trip) return;
+    setGeneratingId(trip.id);
+    try {
+      const doc = await PDFDocument.create();
+      const page = doc.addPage([612, 792]); // US Letter
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+      const { width, height } = page.getSize();
+      let y = height - 60;
+      const lineHeight = 20;
+
+      const drawLine = (label, value, isBold = false) => {
+        page.drawText(`${label}: ${safeText(value)}`, {
+          x: 60,
+          y,
+          size: 12,
+          font: isBold ? bold : font,
+          color: rgb(0.1, 0.12, 0.16),
+        });
+        y -= lineHeight;
+      };
+
+      page.drawText("Flight Receipt", {
+        x: 60,
+        y,
+        size: 20,
+        font: bold,
+        color: rgb(0.05, 0.18, 0.42),
+      });
+      y -= lineHeight * 1.5;
+
+      drawLine("Booking ID", trip.id, true);
+      drawLine("Status", trip.status || "N/A");
+      drawLine("Booked at", formatDateTime(trip.booked_at));
+      y -= 8;
+      drawLine(
+        "Flight",
+        trip.flights?.flight_code || "Flight details unavailable",
+        true,
+      );
+      drawLine("Route", `${trip.flights?.departure_airport ?? "TBD"} to ${
+        trip.flights?.destination_airport ?? "TBD"
+      }`);
+      drawLine("Departure", formatDateTime(trip.flights?.departure_time));
+      drawLine("Arrival", formatDateTime(trip.flights?.arrival_time));
+      drawLine("Gate", trip.flights?.gate_num ?? "TBD");
+      drawLine("Fare", `$${trip.flights?.price ?? "N/A"}`);
+
+      y -= lineHeight;
+      page.drawText("Notes", {
+        x: 60,
+        y,
+        size: 14,
+        font: bold,
+        color: rgb(0.1, 0.12, 0.16),
+      });
+      y -= lineHeight;
+      page.drawText(
+        "Please arrive at the gate at least 45 minutes before departure. Bring a valid ID and this receipt.",
+        {
+          x: 60,
+          y,
+          size: 11,
+          font,
+          color: rgb(0.22, 0.26, 0.32),
+          maxWidth: width - 120,
+          lineHeight: 14,
+        },
+      );
+
+      const pdfBytes = await doc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `flight-receipt-${trip.id}.pdf`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 200);
+
+      // Fallback for browsers that block programmatic download
+      if (!document.hasFocus()) {
+        window.open(url, "_blank");
+      }
+    } catch (error) {
+      console.error("Failed to generate receipt", error);
+      alert("We could not generate your receipt. Please try again.");
+    } finally {
+      setGeneratingId(null);
+    }
+  }
+
   return (
     <main className="flightlist">
       <div className="flightlist-header">
-        <h2 className="flightlist-title">My Trips</h2>
+        <div className="flightlist-title-row">
+          <h2 className="flightlist-title">My Trips</h2>
+          <NarrationButton
+            text={
+              trips.length > 0
+                ? `You have ${trips.length} booked ${
+                    trips.length === 1 ? "trip" : "trips"
+                  }. Select a trip to review its details.`
+                : "You have no bookings yet."
+            }
+            label="Hear a summary of your bookings"
+            small
+          />
+        </div>
         {trips.length > 0 && (
           <span className="flightlist-count">
             {trips.length} {trips.length === 1 ? "trip" : "trips"}
@@ -176,6 +299,16 @@ export default function Bookings() {
               </div>
 
               <div className="booking-card-actions">
+                <button
+                  type="button"
+                  className="booking-receipt-btn"
+                  onClick={() => handleGenerateReceipt(trip)}
+                  disabled={generatingId === trip.id}
+                >
+                  {generatingId === trip.id
+                    ? "Generating receipt…"
+                    : "Download receipt"}
+                </button>
                 {trip.status !== "cancelled" ? (
                   <button
                     type="button"

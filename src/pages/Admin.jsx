@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import EmployeeSearchBar from "../components/EmployeeSearchBar";
 import EmployeeFlightResult from "../components/EmployeeFlightResult";
 import EditFlightPopup from "../components/editFlightPopup";
+import NarrationButton from "../components/NarrationButton";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Admin() {
@@ -116,6 +117,17 @@ const handleSaveFlight = async (updatedFlight) => {
 
   return (
     <main className="admin-page">
+      <div className="section-heading" style={{ marginBottom: "0.5rem" }}>
+        <h2 className="flightlist-title" style={{ margin: 0 }}>
+          Flight management
+        </h2>
+        <NarrationButton
+          text="Search flights by departure, destination, date, or ID, then open a card to edit its details."
+          label="Hear how to search and edit flights"
+          small
+        />
+      </div>
+
       <EmployeeSearchBar onSearch={handleSearch} onReset={handleReset} />
 
       <EmployeeFlightResult

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import FlightCard from "./FlightCard";
+import NarrationButton from "./NarrationButton";
 
 const INITIAL_BATCH = 8;
 const BATCH_SIZE = 6;
@@ -11,6 +12,9 @@ export default function FlightList({ flights = [], onSelectFlight }) {
   const hasFlights = flights.length > 0;
   const displayFlights = flights.slice(0, visibleCount);
   const canLoadMore = visibleCount < flights.length;
+  const narrationText = hasFlights
+    ? `Showing ${flights.length} flights. Scroll to load more results and select a card to book.`
+    : "No flights match your search. Adjust departure, arrival, or date filters.";
 
   useEffect(() => {
     setVisibleCount(Math.min(INITIAL_BATCH, flights.length || INITIAL_BATCH));
@@ -40,7 +44,14 @@ export default function FlightList({ flights = [], onSelectFlight }) {
   return (
     <section className="flightlist">
       <div className="flightlist-header">
-        <h2 className="flightlist-title">Results</h2>
+        <div className="flightlist-title-row">
+          <h2 className="flightlist-title">Results</h2>
+          <NarrationButton
+            text={narrationText}
+            label="Hear flight results summary"
+            small
+          />
+        </div>
         {hasFlights && (
           <span className="flightlist-count">
             {flights.length} {flights.length === 1 ? "flight" : "flights"}

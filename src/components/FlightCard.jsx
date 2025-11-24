@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import NarrationButton from "./NarrationButton";
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {
   month: "short",
@@ -67,6 +68,13 @@ export default function FlightCard({ flight, onSelect }) {
   const gateLabel = flight.gate_num ? `Gate ${flight.gate_num}` : "Gate TBD";
   const departureTimestamp = flight.departure_time || flight.departureTime;
   const arrivalTimestamp = flight.arrival_time || flight.arrive_time;
+  const narrationText = `Flight ${flight.flight_code || flight.id} from ${
+    flight.departure_airport || "unknown departure"
+  } to ${flight.destination_airport || "unknown destination"}. Departure ${formatDateTime(
+    departureTimestamp,
+  )}. Arrival ${formatDateTime(arrivalTimestamp)}. Status ${statusLabel}${
+    seatsLeft !== null ? `. Seats left ${seatsLeft}` : ""
+  }. Price ${priceDisplay}.`;
 
   function handleClick() {
     onSelect?.(flight);
@@ -102,7 +110,14 @@ export default function FlightCard({ flight, onSelect }) {
             {flight.flight_code || "Flight"} • {flight.id}
           </p>
         </div>
-        <p className="flight-card-price">{priceDisplay}</p>
+        <div className="flight-card-actions">
+          <NarrationButton
+            text={narrationText}
+            label={`Hear details for flight ${flight.flight_code || flight.id}`}
+            small
+          />
+          <p className="flight-card-price">{priceDisplay}</p>
+        </div>
       </header>
 
       <div className="flight-card-body">

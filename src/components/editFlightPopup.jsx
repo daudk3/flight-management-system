@@ -75,7 +75,7 @@ export default function EditFlightPopup({ flight, onClose, onSave }) {
     
     try {
       const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
+      let page = pdfDoc.addPage([600, 800]);
 
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       let y = 760;

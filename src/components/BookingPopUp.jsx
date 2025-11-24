@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./BookingPopUp.css";
 import { supabase } from "../lib/supabaseClient";
+import NarrationButton from "./NarrationButton";
 
 const INITIAL_FORM = {
   firstName: "",
@@ -204,7 +205,26 @@ export default function BookingPopUp({
           ×
         </button>
         <header className="booking-popup-header">
-          <h2 id="booking-popup-title">Book Flight</h2>
+          <div className="booking-popup-title-row">
+            <h2 id="booking-popup-title">Book Flight</h2>
+            <NarrationButton
+              text={
+                flightSummary
+                  ? `Booking ${flightSummary.title}. ${
+                      flightSummary.subTitle
+                        ? `Route ${flightSummary.subTitle}.`
+                        : ""
+                    } ${
+                      flightSummary.schedule
+                        ? `Schedule ${flightSummary.schedule}.`
+                        : ""
+                    } ${flightSummary.price ? `Price ${flightSummary.price}.` : ""}`
+                  : "Select a flight to review its details before booking."
+              }
+              label="Hear selected flight summary"
+              small
+            />
+          </div>
           {flightSummary ? (
             <div className="booking-popup-flight">
               <h3>{flightSummary.title}</h3>
@@ -227,7 +247,14 @@ export default function BookingPopUp({
 
         <section className="booking-seat-section">
           <header className="booking-seat-header">
-            <h3>Select Your Seat</h3>
+            <div className="booking-seat-title-row">
+              <h3>Select Your Seat</h3>
+              <NarrationButton
+                text="Choose an available seat and then continue to the booking form."
+                label="Hear seat selection instructions"
+                small
+              />
+            </div>
             <p>Choose an available seat to continue your booking.</p>
           </header>
 

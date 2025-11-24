@@ -43,6 +43,17 @@
   margin-bottom: 1.5rem;
 }
 
+.booking-popup-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.booking-popup-title-row .narration-button {
+  flex-shrink: 0;
+}
+
 .booking-popup-header h2 {
   margin: 0;
   color: #1e40af;
@@ -172,10 +183,26 @@
   padding-top: 1.25rem;
 }
 
+.booking-seat-header {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .booking-seat-header h3 {
   margin: 0;
   font-size: 1rem;
   color: #1e3a8a;
+}
+
+.booking-seat-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.booking-seat-title-row .narration-button {
+  flex-shrink: 0;
 }
 
 .booking-seat-header p {
@@ -231,6 +258,7 @@
   font-size: 0.85rem;
   color: #475569;
   flex-wrap: wrap;
+}
 .booking-seat-legend-box {
   display: inline-flex;
   width: 14px;

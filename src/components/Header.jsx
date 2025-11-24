@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { UserIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, UserIcon } from "@heroicons/react/24/outline";
 import "./Header.css";
 import { useAuth } from "../context/AuthContext";
 
@@ -33,6 +33,13 @@ export default function Header() {
           {role === "admin" && (
             <Link to="/admin" className="btn btn-primary">
               Admin Dashboard
+            </Link>
+          )}
+
+          {user && (
+            <Link to="/settings" className="btn btn-primary">
+              <Cog6ToothIcon className="icon" />
+              Settings
             </Link>
           )}
 
