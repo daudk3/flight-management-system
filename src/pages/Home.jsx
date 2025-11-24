@@ -3,6 +3,7 @@ TODO
 User can search for flights and see results (using FlightList.jsx)
 */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import FlightList from "../components/FlightList";
 import BookingPopUp from "../components/BookingPopUp";
@@ -22,6 +23,7 @@ export default function Home() {
   const [results, setResults] = useState(flights);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     async function fetchFlights() {
@@ -120,88 +122,35 @@ export default function Home() {
     setSelectedFlight(null);
   }
 
-  async function handleBookingSubmit(bookingData) {
-    if (!selectedFlight) {
+  function handleBookingSubmit(bookingData) {
+    const flightDetails = bookingData?.flight ?? selectedFlight;
+    if (!flightDetails) {
       alert("Select a flight before booking.");
       return;
     }
 
-    if (!bookingData?.seatId) {
-      alert("Select a seat before confirming your booking.");
+    if (!bookingData?.seatIds?.length) {
+      alert("Select at least one seat before continuing to checkout.");
       return;
     }
 
-    let seatReserved = false;
-    let bookingRecord = null;
-    try {
-      const { data: userResponse } = await supabase.auth.getUser();
-      const user = userResponse?.user;
+    const checkoutPayload = {
+      flight: flightDetails,
+      passengerCount: bookingData.passengers ?? 1,
+      travelClass: bookingData.travelClass,
+      seatIds: bookingData.seatIds,
+      seatCodes: bookingData.seatCodes,
+      notes: bookingData.notes,
+      firstName: bookingData.firstName,
+      lastName: bookingData.lastName,
+    };
 
-      if (!user) {
-        alert("Please sign in before booking.");
-        return;
-      }
+    navigate("/checkout", {
+      state: { booking: checkoutPayload },
+    });
 
-      const { data: reservedSeat, error: seatReserveError } = await supabase
-        .from("seats")
-        .update({ is_booked: true })
-        .eq("id", bookingData.seatId)
-        .eq("is_booked", false)
-        .select("id")
-        .maybeSingle();
-
-      if (seatReserveError) {
-        throw seatReserveError;
-      }
-
-      if (!reservedSeat) {
-        throw new Error("That seat was just taken. Please pick another seat.");
-      }
-
-      seatReserved = true;
-
-      const { data: booking, error } = await supabase
-        .from("bookings")
-        .insert([
-          {
-            user_id: user.id,
-            flight_id: selectedFlight.id,
-            status: "confirmed",
-            booked_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-      bookingRecord = booking;
-
-      const { error: linkError } = await supabase
-        .from("booking_seats")
-        .insert([{ booking_id: booking.id, seat_id: bookingData.seatId }]);
-      if (linkError) {
-        throw linkError;
-      }
-
-      alert(
-        `Flight booked successfully! Seat ${bookingData.seatCode} is reserved for you.`,
-      );
-      handleBookingClose();
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      if (bookingRecord?.id) {
-        await supabase.from("bookings").delete().eq("id", bookingRecord.id);
-      }
-      if (seatReserved) {
-        await supabase
-          .from("seats")
-          .update({ is_booked: false })
-          .eq("id", bookingData.seatId);
-      }
-      alert(err.message ?? "Booking failed. Please try again.");
-    }
+    setIsBookingOpen(false);
+    setSelectedFlight(null);
   }
 
   return (

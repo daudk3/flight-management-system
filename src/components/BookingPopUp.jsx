@@ -6,12 +6,34 @@ import NarrationButton from "./NarrationButton";
 const INITIAL_FORM = {
   firstName: "",
   lastName: "",
-  email: "",
-  phone: "",
   passengers: "1",
   travelClass: "economy",
   notes: "",
 };
+
+function parseSeatCode(code = "") {
+  const rowMatch = code.match(/(\d+)/);
+  const row = rowMatch ? Number(rowMatch[1]) : Number.MAX_SAFE_INTEGER;
+  const letter = code.replace(/\d+/g, "") || "";
+  return { row, letter };
+}
+
+function sortSeatRows(seatA, seatB) {
+  const aParsed = parseSeatCode(seatA.seat_code || "");
+  const bParsed = parseSeatCode(seatB.seat_code || "");
+  if (aParsed.row !== bParsed.row) {
+    return aParsed.row - bParsed.row;
+  }
+  if (aParsed.letter && bParsed.letter) {
+    return aParsed.letter.localeCompare(bParsed.letter, undefined, {
+      sensitivity: "base",
+    });
+  }
+  return (seatA.seat_code || "").localeCompare(seatB.seat_code || "", undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
 
 export default function BookingPopUp({
   isOpen = false,
@@ -24,7 +46,7 @@ export default function BookingPopUp({
   const [seatLoading, setSeatLoading] = useState(false);
   const [seatFetchError, setSeatFetchError] = useState("");
   const [seatSelectionError, setSeatSelectionError] = useState("");
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   const flightSummary = useMemo(() => {
     if (!flight) {
@@ -78,7 +100,7 @@ export default function BookingPopUp({
         flight?.travelClass?.toLowerCase?.() ?? INITIAL_FORM.travelClass,
       passengers: "1",
     }));
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     setSeatSelectionError("");
   }, [isOpen, flight]);
 
@@ -108,7 +130,7 @@ export default function BookingPopUp({
         setSeatFetchError("Seats have not been configured for this flight yet.");
         setSeats([]);
       } else {
-        setSeats(data);
+        setSeats([...data].sort(sortSeatRows));
       }
 
       setSeatLoading(false);
@@ -139,6 +161,7 @@ export default function BookingPopUp({
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setSeatSelectionError("");
   }
 
   function handleOverlayClick(event) {
@@ -147,29 +170,67 @@ export default function BookingPopUp({
     }
   }
 
+  const passengerCount = Math.max(
+    selectedSeats.length,
+    Number(form.passengers) || 1,
+  );
+
   function handleSeatSelect(seat) {
     if (seat.is_booked) {
       setSeatSelectionError(`Seat ${seat.seat_code} is already taken.`);
       return;
     }
 
-    setSelectedSeat(seat);
     setSeatSelectionError("");
+
+    setSelectedSeats((prev) => {
+      const alreadySelected = prev.some((s) => s.id === seat.id);
+      if (alreadySelected) {
+        return prev.filter((s) => s.id !== seat.id);
+      }
+
+      const next = [...prev, seat];
+      setForm((formState) => ({
+        ...formState,
+        passengers: String(Math.max(next.length, Number(formState.passengers) || 1)),
+      }));
+      return next;
+    });
   }
+
+  const seatGroups = useMemo(() => {
+    const grouped = {};
+    seats.forEach((seat) => {
+      const { letter } = parseSeatCode(seat.seat_code);
+      const key = letter || "?";
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+      grouped[key].push(seat);
+    });
+
+    return Object.entries(grouped)
+      .sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+      .map(([letter, groupSeats]) => ({
+        letter,
+        seats: groupSeats.sort(sortSeatRows),
+      }));
+  }, [seats]);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!selectedSeat) {
-      setSeatSelectionError("Select an available seat before continuing.");
+    if (!selectedSeats.length) {
+      setSeatSelectionError("Select at least one seat before continuing.");
       return;
     }
 
+    const passengerCount = selectedSeats.length;
     const bookingData = {
       ...form,
-      passengers: Number(form.passengers) || 1,
+      passengers: passengerCount,
       flight,
-      seatId: selectedSeat.id,
-      seatCode: selectedSeat.seat_code,
+      seatIds: selectedSeats.map((seat) => seat.id),
+      seatCodes: selectedSeats.map((seat) => seat.seat_code),
     };
 
     try {
@@ -248,14 +309,17 @@ export default function BookingPopUp({
         <section className="booking-seat-section">
           <header className="booking-seat-header">
             <div className="booking-seat-title-row">
-              <h3>Select Your Seat</h3>
+              <h3>Select Your Seats</h3>
               <NarrationButton
-                text="Choose an available seat and then continue to the booking form."
+                text="Select available seats to continue your booking. Passenger count updates as you pick seats."
                 label="Hear seat selection instructions"
                 small
               />
             </div>
-            <p>Choose an available seat to continue your booking.</p>
+            <p>
+              Select as many available seats as you need. Passenger count updates
+              automatically.
+            </p>
           </header>
 
           {seatLoading ? (
@@ -264,28 +328,33 @@ export default function BookingPopUp({
             <p className="booking-seat-error">{seatFetchError}</p>
           ) : (
             <>
-              <div className="booking-seat-grid" role="listbox" aria-label="Seat map">
-                {seats.map((seat) => {
-                  const isTaken = seat.is_booked;
-                  const isSelected = selectedSeat?.id === seat.id;
-                  return (
-                    <button
-                      type="button"
-                      key={seat.id}
-                      className={`booking-seat ${isTaken ? "taken" : "available"} ${
-                        isSelected ? "selected" : ""
-                      }`}
-                      onClick={() => handleSeatSelect(seat)}
-                      disabled={isTaken}
-                      aria-pressed={isSelected}
-                      aria-label={`Seat ${seat.seat_code}${isTaken ? " (taken)" : ""}`}
-                      role="option"
-                      aria-selected={isSelected}
-                    >
-                      {seat.seat_code}
-                    </button>
-                  );
-                })}
+              <div className="booking-seat-columns" role="listbox" aria-label="Seat map">
+                {seatGroups.map((group) => (
+                  <div key={group.letter} className="booking-seat-column">
+                    <p className="seat-column-label">{group.letter || "?"}</p>
+                    {group.seats.map((seat) => {
+                      const isTaken = seat.is_booked;
+                      const isSelected = selectedSeats.some((s) => s.id === seat.id);
+                      return (
+                        <button
+                          type="button"
+                          key={seat.id}
+                          className={`booking-seat ${isTaken ? "taken" : "available"} ${
+                            isSelected ? "selected" : ""
+                          }`}
+                          onClick={() => handleSeatSelect(seat)}
+                          disabled={isTaken}
+                          aria-pressed={isSelected}
+                          aria-label={`Seat ${seat.seat_code}${isTaken ? " (taken)" : ""}`}
+                          role="option"
+                          aria-selected={isSelected}
+                        >
+                          {seat.seat_code}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
               <div className="booking-seat-legend">
                 <span>
@@ -294,13 +363,17 @@ export default function BookingPopUp({
                 <span>
                   <span className="booking-seat-legend-box taken" /> Taken
                 </span>
-                <span>
-                  <span className="booking-seat-legend-box selected" /> Selected
-                </span>
-              </div>
-              {selectedSeat && !seatSelectionError && (
+              <span>
+                <span className="booking-seat-legend-box selected" /> Selected
+              </span>
+            </div>
+              <p className="booking-seat-hint">
+                Passengers (auto): {Math.max(1, selectedSeats.length)}
+              </p>
+              {!!selectedSeats.length && !seatSelectionError && (
                 <p className="booking-seat-hint">
-                  Selected seat: {selectedSeat.seat_code}
+                  Selected seats ({selectedSeats.length}/{passengerCount}):{" "}
+                  {selectedSeats.map((seat) => seat.seat_code).join(", ")}
                 </p>
               )}
               {seatSelectionError && (
@@ -331,39 +404,6 @@ export default function BookingPopUp({
                 value={form.lastName}
                 onChange={handleChange}
                 placeholder="e.g. Johnson"
-                required
-              />
-            </label>
-            <label>
-              Email
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="alex@example.com"
-                required
-              />
-            </label>
-            <label>
-              Phone
-              <input
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="+1 555-123-4567"
-              />
-            </label>
-            <label>
-              Passengers
-              <input
-                name="passengers"
-                type="number"
-                min="1"
-                max="9"
-                value={form.passengers}
-                onChange={handleChange}
                 required
               />
             </label>

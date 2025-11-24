@@ -211,13 +211,37 @@
   font-size: 0.9rem;
 }
 
-.booking-seat-grid {
+.booking-seat-columns {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
   margin-top: 0.75rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
-  gap: 0.5rem;
-  max-height: 240px;
+  overflow-x: hidden;
   overflow-y: auto;
+  max-height: 260px;
+  padding: 0.5rem 0.25rem 0.75rem;
+}
+
+.booking-seat-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 68px;
+}
+
+.seat-column-label {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.booking-seat {
+  width: 68px;
+  text-align: center;
 }
 
 .booking-seat {

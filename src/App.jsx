@@ -6,6 +6,9 @@ import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
 import SignIn from "./pages/SignIn";
 import CreateAccount from "./pages/CreateAccount";
+import StripeCheckoutPage, {
+  StripeReturnPage,
+} from "./pages/StripeCheckout";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -20,10 +23,13 @@ export default function App() {
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/create-account" element={<CreateAccount />} />
+              <Route path="/stripe-return" element={<StripeReturnPage />} />
 
               <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/bookings" element={<Bookings />} />
+                <Route path="/checkout" element={<StripeCheckoutPage />} />
+                <Route path="/stripe-checkout" element={<StripeCheckoutPage />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
