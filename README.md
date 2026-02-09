@@ -3,7 +3,7 @@
 Modern flight booking and operations dashboard built with Vite + React 19, Supabase, and Stripe. Customers can search flights, pick seats, pay via embedded Stripe Checkout, and manage trips. Admins can search and edit flights, manage passengers, and export flight reports. The UI includes built‑in narration and contrast controls for accessibility.
 
 ## Demo
-[▶️ Watch the demo (MP4)](assets/demo.mp4) — opens inline on GitHub web and in most markdown viewers.
+![Demo](assets/demo.gif)
 
 ## Features
 - Customer portal: flight search, seat selection, booking popup with special requests, and embedded Stripe payment flow.
