@@ -5,6 +5,9 @@ Modern flight booking and operations dashboard built with Vite + React 19, Supab
 ## Demo
 ![Demo](assets/demo.gif)
 
+## System Architecture
+![System Architecture Diagram](assets/arch-diagram.svg)
+
 ## Features
 - Customer portal: flight search, seat selection, booking popup with special requests, and embedded Stripe payment flow.
 - Bookings hub: view trips, cancel reservations, and download PDF receipts.

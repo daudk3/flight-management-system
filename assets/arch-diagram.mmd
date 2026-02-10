@@ -1,0 +1,156 @@
+flowchart TB
+
+%% ======================
+%% CLIENT
+%% ======================
+subgraph Client["Client Browser"]
+    Browser["User Browser"]:::external
+end
+
+%% ======================
+%% FRONTEND
+%% ======================
+subgraph Frontend["Frontend (React + Vite SPA)"]
+    EntryMain["main.jsx"]:::frontend
+    App["App.jsx"]:::frontend
+
+    AuthContext["AuthContext.jsx"]:::frontend
+    AccessibilityContext["AccessibilityContext.jsx"]:::frontend
+    SupabaseClient["supabaseClient.js"]:::frontend
+
+    Filters["Filters.jsx"]:::frontend
+    EmployeeSearch["EmployeeSearchBar.jsx"]:::frontend
+
+    FlightList["FlightList.jsx"]:::frontend
+    FlightCard["FlightCard.jsx"]:::frontend
+    EmployeeFlightResult["EmployeeFlightResult.jsx"]:::frontend
+    EmployeeFlightCard["EmployeeFlightCard.jsx"]:::frontend
+
+    BookingPopUp["BookingPopUp.jsx"]:::frontend
+    ProtectedRoute["ProtectedRoute.jsx"]:::frontend
+
+    CheckoutPage["Checkout.jsx"]:::frontend
+    StripeCheckoutPage["StripeCheckout.jsx"]:::frontend
+
+    HomePage["Home.jsx"]:::frontend
+    SignInPage["SignIn.jsx"]:::frontend
+    CreateAccount["CreateAccount.jsx"]:::frontend
+    BookingsOverview["Bookings.jsx"]:::frontend
+    SettingsPage["Settings.jsx"]:::frontend
+    AdminDashboard["Admin.jsx"]:::frontend
+
+    Utils["utils.js"]:::frontend
+end
+
+%% ======================
+%% CONFIG / ASSETS
+%% ======================
+subgraph Config["Configuration & Assets"]
+    ViteConfig["vite.config.js"]:::frontend
+    Env[".env / .env.local"]:::frontend
+    IndexHTML["index.html"]:::frontend
+    PublicAssets["public/"]:::frontend
+    Assets["assets/"]:::frontend
+end
+
+%% ======================
+%% BACKEND
+%% ======================
+subgraph Backend["Backend Service (Node + Express)"]
+    Server["server.js\nPOST /create-checkout\nPOST /webhook"]:::backend
+    PDFLib["pdf-lib"]:::external
+end
+
+%% ======================
+%% DATABASE
+%% ======================
+subgraph DB["Supabase (Postgres)"]
+    Profiles["profiles"]:::db
+    Flights["flights"]:::db
+    Seats["seats"]:::db
+    Bookings["bookings"]:::db
+    BookingSeats["booking_seats"]:::db
+end
+
+%% ======================
+%% EXTERNAL
+%% ======================
+subgraph External["External Services"]
+    Stripe["Stripe"]:::external
+end
+
+%% ======================
+%% FLOWS
+%% ======================
+Browser -->|"loads SPA"| EntryMain
+EntryMain --> App
+
+App -->|"wraps"| AuthContext
+App -->|"wraps"| AccessibilityContext
+App -->|"uses"| SupabaseClient
+
+App --> Filters
+App --> EmployeeSearch
+App --> FlightList
+FlightList --> FlightCard
+
+App --> EmployeeFlightResult
+EmployeeFlightResult --> EmployeeFlightCard
+
+App --> BookingPopUp
+BookingPopUp --> ProtectedRoute
+
+App --> CheckoutPage
+App --> StripeCheckoutPage
+
+App --> HomePage
+App --> SignInPage
+App --> CreateAccount
+App --> BookingsOverview
+App --> SettingsPage
+App --> AdminDashboard
+
+App --> Utils
+
+%% ======================
+%% CONFIG USAGE
+%% ======================
+App -->|"build config"| ViteConfig
+App -->|"env vars"| Env
+App -->|"HTML shell"| IndexHTML
+App -->|"static files"| PublicAssets
+App -->|"static assets"| Assets
+
+%% ======================
+%% PAYMENT FLOW
+%% ======================
+CheckoutPage -->|"POST /create-checkout"| Server
+StripeCheckoutPage -->|"POST /create-checkout"| Server
+
+Server -->|"Stripe SDK"| Stripe
+Stripe -.->|"webhook\ncheckout.session.completed"| Server
+
+Server -->|"generate receipt"| PDFLib
+
+%% ======================
+%% DATABASE ACCESS
+%% ======================
+SupabaseClient -->|"RLS reads/writes"| Profiles
+SupabaseClient -->|"RLS reads/writes"| Flights
+SupabaseClient -->|"RLS reads/writes"| Seats
+SupabaseClient -->|"RLS reads/writes"| Bookings
+SupabaseClient -->|"RLS reads/writes"| BookingSeats
+
+Server -->|"service-role writes"| Profiles
+Server -->|"service-role writes"| Flights
+Server -->|"service-role writes"| Seats
+Server -->|"service-role writes"| Bookings
+Server -->|"service-role writes"| BookingSeats
+
+%% ======================
+%% STYLES
+%% ======================
+classDef frontend fill:#BBDEFB,stroke:#0D47A1,color:#0D47A1
+classDef backend fill:#C8E6C9,stroke:#1B5E20,color:#1B5E20
+classDef db fill:#FFE0B2,stroke:#E65100,color:#E65100
+classDef external fill:#E1BEE7,stroke:#4A148C,color:#4A148C
